@@ -1,0 +1,44 @@
+@import url('https://fonts.googleapis.com/css2?family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap');
+
+@import "tailwindcss";
+@plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: "assetverse";
+  default: true;
+
+  --color-primary: #1F7A5C;      /* main green */
+  --color-secondary: #E8F5F0;    /* soft mint */
+  --color-accent: #8BC34A;       /* highlight */
+  --color-logo: #6DB33F;       
+  
+
+  --color-neutral: #374151;
+  --color-base-100: #FFFFFF;
+  --color-base-200: #EEF7F3;
+  --color-base-300: #D1E7DD;
+}
+
+body {
+  font-family: "Urbanist", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+  color: #374151;
+  /* background-color: #F5FBF8; */
+ 
+;
+  
+}
+
+/* @import "tailwindcss";
+@plugin "daisyui";
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  --color-primary: blue;
+  --color-secondary: teal;
+}
+body{
+  font-family: "Urbanist", sans-serif;
+  font-optical-sizing: auto;
+  font-style: normal;
+} */

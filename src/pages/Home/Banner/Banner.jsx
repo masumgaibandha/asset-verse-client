@@ -7,7 +7,7 @@ import bannerImg3 from "../../../assets/banner-3.jpg";
 
 const Banner = () => {
     return (
-        <div className="w-full container mx-auto my-5">
+        <div className=" container mx-auto my-5">
             <Carousel
                 showThumbs={false}
                 showStatus={false}

@@ -2,85 +2,108 @@ import React from 'react'
 
 const Others = () => {
     return (
-        <div>
-            <form onSubmit={handleSearch}>
-                <div className="w-full max-w-2xl pt-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                        {/* Search */}
-                        <div className="flex items-center bg-[#F4F6F8] rounded-full pl-4 h-10 gap-3 flex-1">
-                            <IoIosSearch />
-                            <input
-                                type="search"
-                                name="location"
-                                placeholder="Search by district (e.g., Dhaka)"
-                                className="flex-1 bg-transparent outline-none text-gray-700 text-sm"
-                            />
-                            <button
-                                type="submit"
-                                className="rounded-full px-6 py-2 font-semibold bg-[#C8E24A] text-[#1F1F1F] cursor-pointer"
-                            >
-                                Search
-                            </button>
-                        </div>
+        <div className="bg-base-100 rounded-2xl shadow-sm p-6 md:p-10">
+            <h2 className="text-3xl md:text-5xl font-extrabold text-secondary">
+                Request an Asset
+            </h2>
 
-                        {/* Company filter */}
-                        <select
-                            className="select select-bordered rounded-full h-10"
-                            value={company}
-                            onChange={(e) => setCompany(e.target.value)}
-                        >
-                            {companies.map((c) => (
-                                <option key={c} value={c}>
-                                    {c}
-                                </option>
-                            ))}
+            <p className="mt-3 text-base-content/70 max-w-2xl">
+                Submit a request for an available company asset. HR will review and
+                approve or reject your request.
+            </p>
+
+            <div className="divider my-8" />
+
+            <form className="space-y-6">
+                {/* Asset Info */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="form-control">
+                        <label className="label">
+                            <span className="label-text font-semibold">Asset Name</span>
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="e.g., MacBook Pro 14”"
+                            className="input input-bordered w-full"
+                        />
+                    </div>
+
+                    <div className="form-control">
+                        <label className="label">
+                            <span className="label-text font-semibold">Asset ID</span>
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="e.g., AV-2025-0012"
+                            className="input input-bordered w-full"
+                        />
+                    </div>
+
+                    <div className="form-control">
+                        <label className="label">
+                            <span className="label-text font-semibold">Asset Type</span>
+                        </label>
+                        <select className="select select-bordered w-full">
+                            <option value="">Select type</option>
+                            <option>Returnable</option>
+                            <option>Non-returnable</option>
                         </select>
                     </div>
 
-                    <div className="divider my-8" />
+                    <div className="form-control">
+                        <label className="label">
+                            <span className="label-text font-semibold">Company</span>
+                        </label>
+                        <input
+                            type="text"
+                            placeholder="e.g., TestCompany Ltd."
+                            className="input input-bordered w-full"
+                        />
+                    </div>
+                </div>
 
-                    <h2 className="text-[30px] font-extrabold">
-                        Company coverage & asset service points
-                    </h2>
-                    <p className="text-base-content/70 mt-2">
-                        Pick a company and search a district to zoom in and view details.
-                    </p>
+                {/* Request Details */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="form-control">
+                        <label className="label">
+                            <span className="label-text font-semibold">Request Date</span>
+                        </label>
+                        <input type="date" className="input input-bordered w-full" />
+                    </div>
+
+                    <div className="form-control">
+                        <label className="label">
+                            <span className="label-text font-semibold">Priority</span>
+                        </label>
+                        <select className="select select-bordered w-full">
+                            <option value="">Select priority</option>
+                            <option>Normal</option>
+                            <option>High</option>
+                            <option>Urgent</option>
+                        </select>
+                    </div>
+
+                    <div className="form-control md:col-span-2">
+                        <label className="label">
+                            <span className="label-text font-semibold">Note (Optional)</span>
+                        </label>
+                        <textarea
+                            className="textarea textarea-bordered min-h-28"
+                            placeholder="Write a short note for HR (why you need this asset, duration, etc.)"
+                        ></textarea>
+                    </div>
+                </div>
+
+                {/* Buttons */}
+                <div className="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button type="button" className="btn btn-primary rounded-xl px-8">
+                        Submit Request
+                    </button>
+                    <button type="button" className="btn btn-outline rounded-xl px-8">
+                        Reset
+                    </button>
                 </div>
             </form>
-
-            <div className="w-full h-[800px] border-2 rounded-xl overflow-hidden">
-                <MapContainer
-                    center={position}
-                    zoom={8}
-                    scrollWheelZoom={false}
-                    className="h-[800px]"
-                    ref={mapRef}
-                >
-                    <TileLayer
-                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-
-                    {filteredCenters.map((center, index) => (
-                        <Marker key={index} position={[center.latitude, center.longitude]}>
-                            <Popup>
-                                <div className="space-y-1">
-                                    <p className="font-bold">{center.companyName || "Company"}</p>
-                                    <p>
-                                        <span className="font-semibold">District:</span> {center.district}
-                                    </p>
-                                    <p className="text-sm">
-                                        <span className="font-semibold">Service Area:</span>{" "}
-                                        {center.covered_area?.join(", ") || "N/A"}
-                                    </p>
-                                </div>
-                            </Popup>
-                        </Marker>
-                    ))}
-                </MapContainer>
-            </div>
-
-
         </div>
     )
 }

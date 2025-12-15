@@ -2,18 +2,22 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import useAuth from '../../../hooks/useAuth'
 import { toast } from 'react-toastify'
-import { data, Link } from 'react-router'
+import { data, Link, useLocation, useNavigate } from 'react-router'
 import SocialLogin from '../SocialLogin/SocialLogin'
 
 const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm()
   const {signInUser, signInGoogle} = useAuth()
+  const location = useLocation();
+  const navigate = useNavigate();
+  
 
   const handleLogin = (data) => {
     console.log('Login Form Data', data)
     signInUser(data.email, data.password)
     .then(result => {
       toast.success('Log in Success')
+      navigate(location?.state || '/')
     })
     .catch(error =>{
       toast.error('Login failed')
@@ -31,7 +35,7 @@ const Login = () => {
         <fieldset className="fieldset">
           {/* Email Field */}
           <label className="label">Email</label>
-          <input type="email" {...register('email', { required: true })} className="input" placeholder="Email" />
+          <input type="email" {...register('email', {required: true})} className="input" placeholder="Email" />
 
           {
             errors.email?.type === "required" && <p className='text-red-500'>Email is required</p>
@@ -39,7 +43,7 @@ const Login = () => {
 
           {/* Pasword Field */}
           <label className="label">Password</label>
-          <input type="password" {...register('password', { required: true })} className="input" placeholder="Password" />
+          <input type="password" {...register('password', {required: true})} className="input" placeholder="Password" />
           
           {
             errors.password?.type === 'required' && <p className='text-red-500'> Input Valid Password</p>
@@ -49,7 +53,10 @@ const Login = () => {
           <button className="btn btn-neutral bg-accent mt-4">Login</button>
             <SocialLogin></SocialLogin>
         </fieldset>
-          <p>New to AssetVerse? <Link className='text-blue-500' to={'/register'}>Register</Link></p>
+          <p>New to AssetVerse? <Link 
+          state={location.state}
+          className='text-blue-500' 
+          to={'/register'}>Register</Link></p>
       </form>
     </div>
   )

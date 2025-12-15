@@ -1,10 +1,23 @@
 import React from "react";
 import { Link, NavLink } from "react-router";
+import useAuth from "../../../../hooks/useAuth";
+import { toast } from "react-toastify";
 
 const isLoggedIn = true; // change to false to preview public state
 
 const Navbar = () => {
-    const publicLinks = (
+    const {user, logOut} = useAuth()
+
+    const handleLogOut = () =>{
+        logOut()
+        .then(resutl =>{
+            toast.success('Log Out Successful')
+        })
+        .catch(error=>{
+            toast.error("Log Out Failed")
+        })
+    }
+    const links = (
         <>
             <li><NavLink to="/">Home</NavLink></li>
             <li><NavLink to="/services">Services</NavLink></li>
@@ -30,13 +43,20 @@ const Navbar = () => {
                 {/* Center: Links */}
                 <div className="hidden lg:flex">
                     <ul className="menu menu-horizontal px-1 text-[16px] gap-1">
-                        {publicLinks}
+                        {links}
                     </ul>
                 </div>
 
                 {/* Right: Auth Button / Profile */}
                 <div className="flex items-center gap-3">
-                    {!isLoggedIn ? (
+                    <div>
+                        {
+                            user? <a onClick={handleLogOut} className="btn btn-accent text-white w-25">Log Out</a>
+                            : <Link className="btn btn-accent text-white w-25" to='/login'>Login</Link>
+                        }
+                        
+                    </div>
+                    {/* {!isLoggedIn ? (
                         <NavLink to="/login" className="btn btn-primary rounded-xl">
                             Login
                         </NavLink>
@@ -58,7 +78,7 @@ const Navbar = () => {
                                 <li><button type="button">Logout</button></li>
                             </ul>
                         </div>
-                    )}
+                    )} */}
                 </div>
 
                 {/* Mobile Menu */}
@@ -69,7 +89,7 @@ const Navbar = () => {
                         </svg>
                     </div>
                     <ul tabIndex={0} className="menu dropdown-content mt-3 z-[1] w-56 rounded-box bg-base-100 p-2 shadow">
-                        {publicLinks}
+                        {links}
                         <li className="mt-2">
                             {!isLoggedIn ? (
                                 <NavLink to="/login" className="btn btn-primary w-full rounded-xl">

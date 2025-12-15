@@ -2,11 +2,12 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import useAuth from '../../../hooks/useAuth'
 import { toast } from 'react-toastify'
-import { Link } from 'react-router'
+import { data, Link } from 'react-router'
+import SocialLogin from '../SocialLogin/SocialLogin'
 
 const Login = () => {
   const { register, handleSubmit, formState: { errors } } = useForm()
-  const {signInUser} = useAuth()
+  const {signInUser, signInGoogle} = useAuth()
 
   const handleLogin = (data) => {
     console.log('Login Form Data', data)
@@ -17,8 +18,9 @@ const Login = () => {
     .catch(error =>{
       toast.error('Login failed')
     })
-
   }
+
+  
 
   return (
     <div className="card bg-base-100 w-full mx-auto max-w-sm shrink-0 shadow-2xl">
@@ -45,6 +47,7 @@ const Login = () => {
 
           <div><a className="link link-hover">Forgot password?</a></div>
           <button className="btn btn-neutral bg-accent mt-4">Login</button>
+            <SocialLogin></SocialLogin>
         </fieldset>
           <p>New to AssetVerse? <Link className='text-blue-500' to={'/register'}>Register</Link></p>
       </form>

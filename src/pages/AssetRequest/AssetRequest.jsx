@@ -1,12 +1,34 @@
 import React from 'react'
 import { useForm } from 'react-hook-form'
 import { data } from 'react-router'
+import Swal from 'sweetalert2'
 
 const AssetRequest = () => {
     const { register, handleSubmit, formState: { errors } } = useForm()
 
     const handleAssetRequest = data => {
         console.log(data)
+       
+        Swal.fire({
+            title: "Are you sure to submit?",
+            text: "It will take time for HR approval",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Yes, confirmed"
+        }).then((result) => {
+            if (result.isConfirmed) {
+
+
+                
+                // Swal.fire({
+                //     title: "Deleted!",
+                //     text: "Your file has been deleted.",
+                //     icon: "success"
+                // });
+            }
+        });
 
     }
 
@@ -44,8 +66,8 @@ const AssetRequest = () => {
                 {/* two columns */}
                 <div className='grid grid-cols-1 md:grid-cols-2 gap-12'>
                     {/* Employe details */}
-                    
-                    <fieldset className="fieldset space-y-2">                       
+
+                    <fieldset className="fieldset space-y-2">
                         {/* Employee Name */}
                         <h2 className="text-2xl font-bold">Employee Details</h2>
                         <label className="label">Employee Name</label>
@@ -63,7 +85,7 @@ const AssetRequest = () => {
 
 
                     </fieldset>
-                   
+
                     {/* HR details */}
 
                     <fieldset className="fieldset space-y-2">

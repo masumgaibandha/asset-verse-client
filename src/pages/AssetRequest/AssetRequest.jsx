@@ -91,6 +91,7 @@ const AssetRequest = () => {
                         {/* Employee Email */}
                         <label className="label">Employee Email</label>
                         <input type="email" {...register('employeeEmail', { required: true })} 
+                        defaultValue={user?.email}
                         className="input w-full" placeholder="Email Address" />
                         {/* Employee Designation */}
                         <label className="label">Employee Designation</label>

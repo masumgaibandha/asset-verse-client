@@ -1,6 +1,7 @@
 import React from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
 import { PiBuildingOfficeLight } from "react-icons/pi";
+import { FcPackage } from "react-icons/fc";
 
 
 
@@ -39,12 +40,18 @@ const DashboardLayout = () => {
                         {/* Our DashBoard Link here */}
 
                         <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="MyAssets" to={'/dashboard/my-assets'}>
-                        <PiBuildingOfficeLight />
+                        <PiBuildingOfficeLight size={20} />
+                         <span className="is-drawer-close:hidden">My Assets</span>
+                         </NavLink>
+
+
+                         {/* Upgrade package */}
+                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="upgradePackage" to={'/dashboard/upgrade-package'}>
+                        <FcPackage size={20} />
+                         <span className="is-drawer-close:hidden">Upgrade Package</span>
+                         </NavLink>
+
                         
-
-
-                        <span className="is-drawer-close:hidden">My Assets</span></NavLink>
-
                         {/* List item */}
                         <li>
                             <button className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Settings">

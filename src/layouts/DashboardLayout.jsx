@@ -50,6 +50,7 @@ const DashboardLayout = () => {
                         <FcPackage size={20} />
                          <span className="is-drawer-close:hidden">Upgrade Package</span>
                          </NavLink>
+                         
 
                         
                         {/* List item */}

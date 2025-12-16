@@ -13,6 +13,8 @@ import MyAssets from '../pages/Dashboard/MyAssets/MyAssets';
 import EmployeeRegister from '../pages/Auth/Register/EmployeeRegister';
 import HRRegister from '../pages/Auth/Register/HRRegister';
 import UpgradePackage from '../pages/Dashboard/UpgradePackage/UpgradePackage';
+import UpgradeSuccess from '../pages/Dashboard/UpgradePackage/UpgradeSuccess';
+import UpgradeCancelled from '../pages/Dashboard/UpgradePackage/UpgradeCancelled';
 
 
 
@@ -71,6 +73,14 @@ export const router = createBrowserRouter([
         {
         path: 'upgrade-package',
         Component: UpgradePackage
+      },
+      {
+        path: 'upgrade-success',
+        Component: UpgradeSuccess
+      },
+      {
+        path: 'upgrade-cancelled',
+        Component: UpgradeCancelled
       }
       ]
 }

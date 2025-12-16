@@ -24,6 +24,13 @@ const Navbar = () => {
             <li><NavLink to="/asset-request">Asset Request</NavLink></li>
             <li><NavLink to="/asset-overview">Asset Overview</NavLink></li>
             <li><NavLink to="/about">About Us</NavLink></li>
+
+            {
+                user && <>
+                <li><NavLink to="/dashboard/my-assets">My Asset</NavLink></li>
+                </>
+            }
+
         </>
     );
 

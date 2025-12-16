@@ -9,6 +9,8 @@ import Register from "../pages/Auth/Register/Register";
 import PrivateRoute from './PrivateRoute';
 import Employee from '../pages/EmployeeDashboard/Employee';
 import AssetRequest from '../pages/AssetRequest/AssetRequest';
+import DashboardLayout from '../layouts/DashboardLayout';
+import MyAssets from '../pages/Dashboard/MyAssets/MyAssets';
 
 
 export const router = createBrowserRouter([
@@ -47,6 +49,16 @@ export const router = createBrowserRouter([
       {
         path: 'register',
         Component: Register
+      }
+    ]
+  },
+  {
+    path: 'dashboard',
+    element: <PrivateRoute><DashboardLayout></DashboardLayout></PrivateRoute>,
+    children: [
+      {
+        path: 'my-assets',
+        Component: MyAssets
       }
     ]
   }

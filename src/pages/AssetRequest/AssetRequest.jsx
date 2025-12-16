@@ -2,9 +2,19 @@ import React from 'react'
 import { useForm } from 'react-hook-form'
 import { data } from 'react-router'
 import Swal from 'sweetalert2'
+import useAxiosSecure from '../../hooks/useAxiosSecure'
+import useAuth from '../../hooks/useAuth'
 
 const AssetRequest = () => {
-    const { register, handleSubmit, formState: { errors } } = useForm()
+    const { 
+        register, 
+        handleSubmit, 
+        // formState: { errors } 
+    } = useForm()
+    const {user} = useAuth()
+
+    const axiosSecure = useAxiosSecure()
+    
 
     const handleAssetRequest = data => {
         console.log(data)
@@ -19,9 +29,12 @@ const AssetRequest = () => {
             confirmButtonText: "Yes, confirmed"
         }).then((result) => {
             if (result.isConfirmed) {
+               axiosSecure.post('/requests', data) 
+               .then(res=>{
+                console.log('After added request', res.data)
+               })
 
 
-                
                 // Swal.fire({
                 //     title: "Deleted!",
                 //     text: "Your file has been deleted.",
@@ -71,10 +84,14 @@ const AssetRequest = () => {
                         {/* Employee Name */}
                         <h2 className="text-2xl font-bold">Employee Details</h2>
                         <label className="label">Employee Name</label>
-                        <input type="text" {...register('employeeName', { required: true })} className="input w-full" placeholder="Employee Name" />
+                        <input type="text" {...register('employeeName', { required: true })} 
+                        defaultValue={user?.displayName}
+                        className="input w-full" placeholder="Employee Name" />
+
                         {/* Employee Email */}
                         <label className="label">Employee Email</label>
-                        <input type="email" {...register('employeeEmail', { required: true })} className="input w-full" placeholder="Email Address" />
+                        <input type="email" {...register('employeeEmail', { required: true })} 
+                        className="input w-full" placeholder="Email Address" />
                         {/* Employee Designation */}
                         <label className="label">Employee Designation</label>
                         <input type="text" {...register('employeeDesignation', { required: true })} className="input w-full" placeholder="Designation" />

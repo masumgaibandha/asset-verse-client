@@ -16,6 +16,7 @@ import UpgradePackage from '../pages/Dashboard/UpgradePackage/UpgradePackage';
 import UpgradeSuccess from '../pages/Dashboard/UpgradePackage/UpgradeSuccess';
 import UpgradeCancelled from '../pages/Dashboard/UpgradePackage/UpgradeCancelled';
 import PaymentHistory from '../pages/Dashboard/PaymentHistory/PaymentHistory';
+import ApproveEmployees from '../pages/Dashboard/ApproveEmployees/ApproveEmployees';
 
 
 
@@ -86,6 +87,10 @@ export const router = createBrowserRouter([
       {
         path: 'payment-history',
         Component: PaymentHistory
+      },
+      {
+        path: 'approve-employees',
+        Component: ApproveEmployees
       }
       ]
 }

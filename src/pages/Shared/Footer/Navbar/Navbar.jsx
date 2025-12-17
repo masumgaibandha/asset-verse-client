@@ -23,14 +23,37 @@ const Navbar = () => {
           <span className="text-xl font-semibold tracking-tight">AssetVerse</span>
         </Link>
 
-        {/* Public Links */}
-        {!user && (
-          <ul className="menu menu-horizontal px-1 text-[16px] gap-1">
-            <li><NavLink to="/">Home</NavLink></li>
-            <li><NavLink to="/employee-register">Join as Employee</NavLink></li>
-            <li><NavLink to="/hr-register">Join as HR Manager</NavLink></li>
-          </ul>
-        )}
+        {/* Center Menu */}
+        <ul className="menu menu-horizontal px-1 text-[16px] gap-1">
+          <li>
+            <NavLink to="/">Home</NavLink>
+          </li>
+
+          {!user && (
+            <>
+              <li>
+                <NavLink to="/employee-register">Join as Employee</NavLink>
+              </li>
+              <li>
+                <NavLink to="/hr-register">Join as HR Manager</NavLink>
+              </li>
+            </>
+          )}
+
+          {user && (
+            <>
+              {/* Employee Page (like instructor rider page style) */}
+              <li>
+                <NavLink to="/employee">Employee</NavLink>
+              </li>
+
+              {/* Dashboard shortcut */}
+              <li>
+                <NavLink to="/dashboard/my-assets">Dashboard</NavLink>
+              </li>
+            </>
+          )}
+        </ul>
 
         {/* Right Side */}
         <div className="flex items-center gap-3">

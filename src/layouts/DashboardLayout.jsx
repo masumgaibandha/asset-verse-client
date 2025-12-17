@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from 'react-router'
 import { PiBuildingOfficeLight } from "react-icons/pi";
 import { TbPackages } from "react-icons/tb";
 import { FaRegCreditCard } from "react-icons/fa";
+import { IoMdPeople } from 'react-icons/io';
 
 
 
@@ -41,22 +42,27 @@ const DashboardLayout = () => {
                         </li>
                         {/* Our DashBoard Link here */}
 
-                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="MyAssets" to={'/dashboard/my-assets'}>
+                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pl-2" data-tip="MyAssets" to={'/dashboard/my-assets'}>
                         <PiBuildingOfficeLight size={20} />
                          <span className="is-drawer-close:hidden">My Assets</span>
                          </NavLink>
 
 
                          {/* Upgrade package */}
-                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="upgradePackage" to={'/dashboard/upgrade-package'}>
+                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="upgradePackage" to={'/dashboard/upgrade-package'}>
                         <TbPackages size={20}/>
                          <span className="is-drawer-close:hidden">Upgrade Package</span>
                          </NavLink>
 
                          {/* Payment History */}
-                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="paymentHistory" to={'/dashboard/payment-history'}>
+                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="paymentHistory" to={'/dashboard/payment-history'}>
                          <FaRegCreditCard size={20}/>
                          <span className="is-drawer-close:hidden">Payment History</span>
+                         </NavLink>
+                         {/* Approve Employee */}
+                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="Approve Employees" to={'/dashboard/approve-employees'}>
+                         <IoMdPeople size={20}/>
+                         <span className="is-drawer-close:hidden">Approve Employees</span>
                          </NavLink>
                          
 

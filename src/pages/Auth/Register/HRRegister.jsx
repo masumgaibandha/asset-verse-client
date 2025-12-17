@@ -4,12 +4,14 @@ import useAuth from "../../../hooks/useAuth";
 import { toast } from "react-toastify";
 import { Link, useLocation, useNavigate } from "react-router";
 import axios from "axios";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const HRRegister = () => {
   const { register, handleSubmit, formState: { errors } } = useForm();
   const { registerUser, updateUserProfile, logOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const axiosSecure = useAxiosSecure();
 
   const handleRegistration = (data) => {
     const profileImg = data.photo[0];
@@ -25,6 +27,26 @@ const HRRegister = () => {
           .then((res) => {
             const uploadedUrl = res?.data?.data?.url;
 
+            const userInfo = {
+              email: data.email,
+              displayName: data.name,
+              photoURL: uploadedUrl,
+              companyName: data.companyName,
+              companyLogo: data.companyLogo,
+              dateOfBirth: data.dateOfBirth,
+              role: "hr",
+              subscription: "basic",
+              packageLimit: 5,
+              createdAt: new Date(),
+            }
+
+            axiosSecure.post('/users', userInfo)
+              .then(res => {
+                if (res.data.insertedId) {
+                  console.log('user created in the database')
+                }
+              })
+
             const userProfile = {
               displayName: data.name,
               photoURL: uploadedUrl,
@@ -32,7 +54,7 @@ const HRRegister = () => {
 
             updateUserProfile(userProfile)
               .then(() => {
-                // ✅ Important: sign out after registration
+                // Important: sign out after registration
                 logOut()
                   .then(() => {
                     toast.success("Registration successful. Please login.");

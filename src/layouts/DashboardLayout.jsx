@@ -1,7 +1,9 @@
 import React from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
 import { PiBuildingOfficeLight } from "react-icons/pi";
-import { FcPackage } from "react-icons/fc";
+import { TbPackages } from "react-icons/tb";
+import { FaRegCreditCard } from "react-icons/fa";
+
 
 
 
@@ -47,8 +49,14 @@ const DashboardLayout = () => {
 
                          {/* Upgrade package */}
                         <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="upgradePackage" to={'/dashboard/upgrade-package'}>
-                        <FcPackage size={20} />
+                        <TbPackages size={20}/>
                          <span className="is-drawer-close:hidden">Upgrade Package</span>
+                         </NavLink>
+
+                         {/* Payment History */}
+                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="paymentHistory" to={'/dashboard/payment-history'}>
+                         <FaRegCreditCard size={20}/>
+                         <span className="is-drawer-close:hidden">Payment History</span>
                          </NavLink>
                          
 

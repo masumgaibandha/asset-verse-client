@@ -15,6 +15,7 @@ import HRRegister from '../pages/Auth/Register/HRRegister';
 import UpgradePackage from '../pages/Dashboard/UpgradePackage/UpgradePackage';
 import UpgradeSuccess from '../pages/Dashboard/UpgradePackage/UpgradeSuccess';
 import UpgradeCancelled from '../pages/Dashboard/UpgradePackage/UpgradeCancelled';
+import PaymentHistory from '../pages/Dashboard/PaymentHistory/PaymentHistory';
 
 
 
@@ -81,6 +82,10 @@ export const router = createBrowserRouter([
       {
         path: 'upgrade-cancelled',
         Component: UpgradeCancelled
+      },
+      {
+        path: 'payment-history',
+        Component: PaymentHistory
       }
       ]
 }

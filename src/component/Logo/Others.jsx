@@ -1,111 +1,149 @@
-import React from 'react'
+import { useQuery } from "@tanstack/react-query";
+import Swal from "sweetalert2";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
-const Others = () => {
+const ApproveEmployees = () => {
+    const axiosSecure = useAxiosSecure();
+
+    const {
+        data: employees = [],
+        refetch,
+        isLoading,
+    } = useQuery({
+        queryKey: ["employees", "pending"],
+        queryFn: async () => {
+            const res = await axiosSecure.get("/employees?status=pending");
+            return res.data;
+        },
+    });
+
+    const updateEmployeeStatus = async (id, status) => {
+        const res = await axiosSecure.patch(`/employees/${id}`, { status });
+        return res.data;
+    };
+
+    const handleApprove = async (id) => {
+        const result = await Swal.fire({
+            title: "Approve employee?",
+            text: "Employee will be marked as approved.",
+            icon: "question",
+            showCancelButton: true,
+            confirmButtonText: "Yes, approve",
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            const data = await updateEmployeeStatus(id, "approved");
+            if (data.modifiedCount) {
+                refetch();
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Employee approved",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+            }
+        } catch (err) {
+            console.log(err);
+            Swal.fire("Error", "Failed to approve employee.", "error");
+        }
+    };
+
+    const handleReject = async (id) => {
+        const result = await Swal.fire({
+            title: "Reject employee?",
+            text: "Employee will be marked as rejected.",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: "Yes, reject",
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            const data = await updateEmployeeStatus(id, "rejected");
+            if (data.modifiedCount) {
+                refetch();
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: "Employee rejected",
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+            }
+        } catch (err) {
+            console.log(err);
+            Swal.fire("Error", "Failed to reject employee.", "error");
+        }
+    };
+
+    if (isLoading) {
+        return <span className="loading loading-infinity loading-lg"></span>;
+    }
+
     return (
-        <div className="bg-base-100 rounded-2xl shadow-sm p-6 md:p-10">
-            <h2 className="text-3xl md:text-5xl font-extrabold text-secondary">
-                Request an Asset
+        <div>
+            <h2 className="text-4xl font-bold mb-6">
+                Employees Pending Approval: {employees.length}
             </h2>
 
-            <p className="mt-3 text-base-content/70 max-w-2xl">
-                Submit a request for an available company asset. HR will review and
-                approve or reject your request.
-            </p>
+            <div className="overflow-x-auto">
+                <table className="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Company</th>
+                            <th>Designation</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
 
-            <div className="divider my-8" />
+                    <tbody>
+                        {employees.map((emp, index) => (
+                            <tr key={emp._id}>
+                                <th>{index + 1}</th>
+                                <td>{emp.name}</td>
+                                <td>{emp.email}</td>
+                                <td>{emp.companyName}</td>
+                                <td>{emp.designation}</td>
+                                <td>
+                                    <span className="badge badge-warning">{emp.status}</span>
+                                </td>
+                                <td className="space-x-2">
+                                    <button
+                                        onClick={() => handleApprove(emp._id)}
+                                        className="btn btn-xs btn-success"
+                                    >
+                                        Approve
+                                    </button>
+                                    <button
+                                        onClick={() => handleReject(emp._id)}
+                                        className="btn btn-xs btn-error"
+                                    >
+                                        Reject
+                                    </button>
+                                </td>
+                            </tr>
+                        ))}
 
-            <form className="space-y-6">
-                {/* Asset Info */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="form-control">
-                        <label className="label">
-                            <span className="label-text font-semibold">Asset Name</span>
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="e.g., MacBook Pro 14”"
-                            className="input input-bordered w-full"
-                        />
-                    </div>
-
-                    <div className="form-control">
-                        <label className="label">
-                            <span className="label-text font-semibold">Asset ID</span>
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="e.g., AV-2025-0012"
-                            className="input input-bordered w-full"
-                        />
-                    </div>
-
-                    <div className="form-control">
-                        <label className="label">
-                            <span className="label-text font-semibold">Asset Type</span>
-                        </label>
-                        <select className="select select-bordered w-full">
-                            <option value="">Select type</option>
-                            <option>Returnable</option>
-                            <option>Non-returnable</option>
-                        </select>
-                    </div>
-
-                    <div className="form-control">
-                        <label className="label">
-                            <span className="label-text font-semibold">Company</span>
-                        </label>
-                        <input
-                            type="text"
-                            placeholder="e.g., TestCompany Ltd."
-                            className="input input-bordered w-full"
-                        />
-                    </div>
-                </div>
-
-                {/* Request Details */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    <div className="form-control">
-                        <label className="label">
-                            <span className="label-text font-semibold">Request Date</span>
-                        </label>
-                        <input type="date" className="input input-bordered w-full" />
-                    </div>
-
-                    <div className="form-control">
-                        <label className="label">
-                            <span className="label-text font-semibold">Priority</span>
-                        </label>
-                        <select className="select select-bordered w-full">
-                            <option value="">Select priority</option>
-                            <option>Normal</option>
-                            <option>High</option>
-                            <option>Urgent</option>
-                        </select>
-                    </div>
-
-                    <div className="form-control md:col-span-2">
-                        <label className="label">
-                            <span className="label-text font-semibold">Note (Optional)</span>
-                        </label>
-                        <textarea
-                            className="textarea textarea-bordered min-h-28"
-                            placeholder="Write a short note for HR (why you need this asset, duration, etc.)"
-                        ></textarea>
-                    </div>
-                </div>
-
-                {/* Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                    <button type="button" className="btn btn-primary rounded-xl px-8">
-                        Submit Request
-                    </button>
-                    <button type="button" className="btn btn-outline rounded-xl px-8">
-                        Reset
-                    </button>
-                </div>
-            </form>
+                        {employees.length === 0 && (
+                            <tr>
+                                <td colSpan="7" className="text-center text-gray-500">
+                                    No pending employees 🎉
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>
         </div>
-    )
-}
+    );
+};
 
-export default Others
+export default ApproveEmployees;

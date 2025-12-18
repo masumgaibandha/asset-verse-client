@@ -5,36 +5,37 @@ import useAxiosSecure from "../../../hooks/useAxiosSecure";
 const ApproveEmployees = () => {
     const axiosSecure = useAxiosSecure();
 
-    const {
-        data: employees = [],
-        refetch,
-        isLoading,
-    } = useQuery({
+    const {data: employees = [], refetch, isLoading,} = useQuery({
         queryKey: ["employees", "pending"],
         queryFn: async () => {
-            const res = await axiosSecure.get("/employees?status=pending");
+            const res = await axiosSecure.get("/employees");
             return res.data;
         },
     });
-
-    const updateEmployeeStatus = async (id, status) => {
-        const res = await axiosSecure.patch(`/employees/${id}`, { status });
+                                        // id
+    const updateEmployeeStatus = async (employee, status) => {
+        // const update = {status: status, email: employee.email}
+        const res = await axiosSecure.patch(`/employees/${employee._id}`, { 
+            status, 
+            email: employee.email, });
         return res.data;
     };
 
-    const handleApprove = async (id) => {
+                                // id
+    const handleApproval = async (employee) => {
         const result = await Swal.fire({
-            title: "Approve employee?",
+            title: "Approved employee?",
             text: "Employee will be marked as approved.",
             icon: "question",
             showCancelButton: true,
-            confirmButtonText: "Yes, approve",
+            confirmButtonText: "Yes, approved",
         });
 
         if (!result.isConfirmed) return;
 
-        try {
-            const data = await updateEmployeeStatus(id, "approved");
+        try {           
+                                                    // id
+            const data = await updateEmployeeStatus(employee, "approved");
             if (data.modifiedCount) {
                 refetch();
                 Swal.fire({
@@ -47,11 +48,11 @@ const ApproveEmployees = () => {
             }
         } catch (err) {
             console.log(err);
-            Swal.fire("Error", "Failed to approve employee.", "error");
+            Swal.fire("Error", "Failed to approved employee.", "error");
         }
     };
-
-    const handleReject = async (id) => {
+                                // id
+    const handleReject = async (employee) => {
         const result = await Swal.fire({
             title: "Reject employee?",
             text: "Employee will be marked as rejected.",
@@ -63,7 +64,8 @@ const ApproveEmployees = () => {
         if (!result.isConfirmed) return;
 
         try {
-            const data = await updateEmployeeStatus(id, "rejected");
+                                                    // id
+            const data = await updateEmployeeStatus(employee, "rejected");
             if (data.modifiedCount) {
                 refetch();
                 Swal.fire({
@@ -105,30 +107,43 @@ const ApproveEmployees = () => {
                     </thead>
 
                     <tbody>
-                        {employees.map((emp, index) => (
-                            <tr key={emp._id}>
+                        {employees.map((employee, index) => (
+                            <tr key={employee._id}>
                                 <th>{index + 1}</th>
-                                <td>{emp.name}</td>
-                                <td>{emp.email}</td>
-                                <td>{emp.companyName}</td>
-                                <td>{emp.designation}</td>
+                                <td>{employee.name}</td>
+                                <td>{employee.email}</td>
+                                <td>{employee.companyName}</td>
+                                <td>{employee.designation}</td>
+                               
                                 <td>
-                                    <span className="badge badge-warning">{emp.status}</span>
+                                    {/* <span className="badge badge-warning">{employee.status}</span> */}
+                                    <p className={`${employee.status === 'approved' ? 'text-green-800 font-extrabold' : 'text-red-600'}`}>{employee.status}</p>
+
                                 </td>
-                                <td className="space-x-2">
+                                  <td className="space-x-2">
+
                                     <button
-                                        onClick={() => handleApprove(emp._id)}
+                                        onClick={() => handleApproval(employee)}
+                                        // employee._id
                                         className="btn btn-xs btn-success"
                                     >
-                                        Approve
+                                        Approved
                                     </button>
+
                                     <button
-                                        onClick={() => handleReject(emp._id)}
+                                        onClick={() => handleReject(employee)}
+                                        // employee._id
                                         className="btn btn-xs btn-error"
                                     >
                                         Reject
                                     </button>
+                                    
                                 </td>
+
+
+
+
+
                             </tr>
                         ))}
 

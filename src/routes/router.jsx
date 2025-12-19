@@ -17,6 +17,8 @@ import UpgradeSuccess from '../pages/Dashboard/UpgradePackage/UpgradeSuccess';
 import UpgradeCancelled from '../pages/Dashboard/UpgradePackage/UpgradeCancelled';
 import PaymentHistory from '../pages/Dashboard/PaymentHistory/PaymentHistory';
 import ApproveEmployees from '../pages/Dashboard/ApproveEmployees/ApproveEmployees';
+import UsersManagement from '../pages/Dashboard/UsersManagement/UsersManagement';
+import HRRoute from './HRRoute';
 
 
 
@@ -90,7 +92,12 @@ export const router = createBrowserRouter([
       },
       {
         path: 'approve-employees',
-        Component: ApproveEmployees
+        element: <HRRoute><ApproveEmployees></ApproveEmployees></HRRoute>
+      },
+      {
+        path: 'users-management',
+        // Component: UsersManagement
+        element: <HRRoute><UsersManagement></UsersManagement></HRRoute>
       }
       ]
 }

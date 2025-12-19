@@ -2,14 +2,20 @@ import React from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
 import { PiBuildingOfficeLight } from "react-icons/pi";
 import { TbPackages } from "react-icons/tb";
-import { FaRegCreditCard } from "react-icons/fa";
+import { FaRegCreditCard, FaUsers } from "react-icons/fa";
 import { IoMdPeople } from 'react-icons/io';
+import { FcApproval } from "react-icons/fc";
+import useRole from '../hooks/useRole';
+
 
 
 
 
 
 const DashboardLayout = () => {
+
+    const { role } = useRole();
+
     return (
         <div className="drawer lg:drawer-open container mx-auto">
             <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
@@ -24,7 +30,7 @@ const DashboardLayout = () => {
                 </nav>
                 {/* Page content here */}
                 <Outlet></Outlet>
-                
+
             </div>
 
             <div className="drawer-side is-drawer-close:overflow-visible">
@@ -40,33 +46,61 @@ const DashboardLayout = () => {
                                 <span className="is-drawer-close:hidden">Homepage</span>
                             </Link>
                         </li>
+
                         {/* Our DashBoard Link here */}
 
-                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pl-2" data-tip="MyAssets" to={'/dashboard/my-assets'}>
-                        <PiBuildingOfficeLight size={20} />
-                         <span className="is-drawer-close:hidden">My Assets</span>
-                         </NavLink>
+                        <li>
+                            <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pl-2" data-tip="MyAssets" to={'/dashboard/my-assets'}>
+                                <PiBuildingOfficeLight size={20} />
+                                <span className="is-drawer-close:hidden">My Assets</span>
+                            </NavLink>
+                        </li>
 
 
-                         {/* Upgrade package */}
-                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="upgradePackage" to={'/dashboard/upgrade-package'}>
-                        <TbPackages size={20}/>
-                         <span className="is-drawer-close:hidden">Upgrade Package</span>
-                         </NavLink>
+                        <li>
+                            {/* Upgrade package */}
+                            <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="upgradePackage" to={'/dashboard/upgrade-package'}>
+                                <TbPackages size={20} />
+                                <span className="is-drawer-close:hidden">Upgrade Package</span>
+                            </NavLink>
+                        </li>
 
-                         {/* Payment History */}
-                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="paymentHistory" to={'/dashboard/payment-history'}>
-                         <FaRegCreditCard size={20}/>
-                         <span className="is-drawer-close:hidden">Payment History</span>
-                         </NavLink>
-                         {/* Approve Employee */}
-                        <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="Approve Employees" to={'/dashboard/approve-employees'}>
-                         <IoMdPeople size={20}/>
-                         <span className="is-drawer-close:hidden">Approve Employees</span>
-                         </NavLink>
-                         
+                        <li>
+                            {/* Payment History */}
+                            <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="paymentHistory" to={'/dashboard/payment-history'}>
+                                <FaRegCreditCard size={20} />
+                                <span className="is-drawer-close:hidden">Payment History</span>
+                            </NavLink>
+                        </li>
 
-                        
+                        {
+                            role === 'hr' && <>
+                                {/* Approve Employee */}
+                                <li>
+
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="Approve Employees" to={'/dashboard/approve-employees'}>
+                                        <FcApproval size={25} />
+
+
+                                        <span className="is-drawer-close:hidden">Approve Employees</span>
+                                    </NavLink>
+                                </li>
+                                {/* Users Management */}
+                                <li>
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="Users Management" to={'/dashboard/users-management'}>
+                                        <IoMdPeople size={20} />
+                                        {/* <FaUsers size={20}/> */}
+                                        <span className="is-drawer-close:hidden">Users Management</span>
+                                    </NavLink>
+                                </li>
+                            </>
+                        }
+                        {/* Masum */}
+
+
+
+
+
                         {/* List item */}
                         <li>
                             <button className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Settings">

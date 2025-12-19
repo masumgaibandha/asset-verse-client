@@ -147,3 +147,89 @@ const ApproveEmployees = () => {
 };
 
 export default ApproveEmployees;
+
+
+// Users management dive
+
+<div className="overflow-x-auto">
+                <table className="table table-zebra">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {users.map((user, index) => (
+                            <tr key={user._id}>
+                                <th>{index + 1}</th>
+
+                                <td>
+                                    <div className="flex items-center gap-3">
+                                        <div className="avatar">
+                                            <div className="mask mask-squircle w-10 h-10">
+                                                <img
+                                                    src={user.photoURL || "https://i.ibb.co/4pDNDk1/avatar.png"}
+                                                    alt="avatar"
+                                                />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="font-bold">
+                                                {user.displayName || "User"}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>{user.email}</td>
+
+                                <td>
+                                    <span
+                                        className={`badge ${user.role === "hr"
+                                                ? "badge-success"
+                                                : user.role === "employee"
+                                                    ? "badge-info"
+                                                    : "badge-warning"
+                                            }`}
+                                    >
+                                        {user.role || "user"}
+                                    </span>
+                                </td>
+
+                                <td className="space-x-2">
+                                    {user.role !== "employee" && (
+                                        <button
+                                            onClick={() => handleMakeEmployee(user)}
+                                            className="btn btn-xs btn-info"
+                                        >
+                                            Make Employee
+                                        </button>
+                                    )}
+
+                                    {user.role !== "hr" && (
+                                        <button
+                                            onClick={() => handleMakeHR(user)}
+                                            className="btn btn-xs btn-success"
+                                        >
+                                            Make HR
+                                        </button>
+                                    )}
+                                </td>
+                            </tr>
+                        ))}
+
+                        {users.length === 0 && (
+                            <tr>
+                                <td colSpan="5" className="text-center text-gray-500">
+                                    No users found
+                                </td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div>

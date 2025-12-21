@@ -6,51 +6,32 @@ import { Link, useLocation, useNavigate } from "react-router";
 import axios from "axios";
 
 const EmployeeRegister = () => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    reset,
-  } = useForm();
-
+  const { register, handleSubmit, formState: { errors } } = useForm();
   const { registerUser, updateUserProfile, logOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
   const handleRegistration = async (data) => {
     try {
-      const profileImg = data.photo?.[0];
-      if (!profileImg) {
-        toast.error("Photo is required");
-        return;
-      }
+      const profileImg = data.photo[0];
 
-      // 1) Firebase register
       await registerUser(data.email, data.password);
 
-      // 2) Upload image to imgbb
       const formData = new FormData();
       formData.append("image", profileImg);
 
-      const image_API_URL = `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_image_host_key
-        }`;
-
+      const image_API_URL = `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_image_host_key}`;
       const imgRes = await axios.post(image_API_URL, formData);
-      const uploadedUrl = imgRes?.data?.data?.url;
 
-      if (!uploadedUrl) {
-        toast.error("Image upload failed");
-        return;
-      }
+      const uploadedUrl = imgRes.data.data.url;
 
-      // 3) Update Firebase profile
       const userProfile = {
         displayName: data.name,
         photoURL: uploadedUrl,
       };
+
       await updateUserProfile(userProfile);
 
-      // 4) Save user to MongoDB
       const userInfo = {
         email: data.email,
         displayName: data.name,
@@ -58,29 +39,26 @@ const EmployeeRegister = () => {
         role: "user",
         createdAt: new Date(),
       };
+
       await axios.post("http://localhost:3000/users", userInfo);
 
-      // 5) Save employee pending record (for approve-employees page)
       const employeeInfo = {
         name: data.name,
         email: data.email,
-        dateOfBirth: data.dateOfBirth,
+        designation: "N/A",
+        companyName: "N/A",
         photoURL: uploadedUrl,
-        companyName: "", // keep empty if not collected here
-        designation: "",
-        createdAt: new Date(),
+        dateOfBirth: data.dateOfBirth,
       };
       await axios.post("http://localhost:3000/employees", employeeInfo);
 
-      // 6) Force logout after register (your flow)
-      await logOut();
 
+      await logOut();
       toast.success("Registration successful. Please login.");
-      reset();
       navigate("/login", { state: location.state });
     } catch (error) {
       console.log(error);
-      toast.error(error?.message || "Registration failed");
+      toast.error("Registration failed");
     }
   };
 
@@ -97,7 +75,7 @@ const EmployeeRegister = () => {
             className="input"
             placeholder="Your Name"
           />
-          {errors.name && <p className="text-red-500">Please input your name</p>}
+          {errors.name && <p className="text-red-500">Name is required</p>}
 
           <label className="label">Date of Birth</label>
           <input
@@ -105,14 +83,11 @@ const EmployeeRegister = () => {
             {...register("dateOfBirth", { required: true })}
             className="input"
           />
-          {errors.dateOfBirth && (
-            <p className="text-red-500">Please select your date of birth</p>
-          )}
+          {errors.dateOfBirth && <p className="text-red-500">Date of birth is required</p>}
 
-          <label className="label">Your Photo</label>
+          <label className="label">Photo</label>
           <input
             type="file"
-            accept="image/*"
             {...register("photo", { required: true })}
             className="file-input"
           />
@@ -125,9 +100,7 @@ const EmployeeRegister = () => {
             className="input"
             placeholder="Email"
           />
-          {errors.email && (
-            <p className="text-red-500">Please input valid email</p>
-          )}
+          {errors.email && <p className="text-red-500">Email is required</p>}
 
           <label className="label">Password</label>
           <input
@@ -140,39 +113,23 @@ const EmployeeRegister = () => {
             className="input"
             placeholder="Password"
           />
-
-          {errors.password?.type === "required" && (
-            <p className="text-red-500">Password is required</p>
-          )}
-          {errors.password?.type === "minLength" && (
-            <p className="text-red-500">Password must be 6 or longer</p>
-          )}
-          {errors.password?.type === "pattern" && (
+          {errors.password && (
             <p className="text-red-500">
-              Password must contain lowercase, uppercase, and a number
+              Password must be 6 chars with upper, lower, number
             </p>
           )}
 
-          <button
-            disabled={isSubmitting}
-            className="btn btn-accent text-white mt-4"
-          >
-            {isSubmitting ? "Registering..." : "Register"}
-          </button>
+          <button className="btn btn-accent text-white mt-4">Register</button>
         </fieldset>
 
         <p>
           Already have account?{" "}
-          <Link state={location.state} className="text-blue-500" to={"/login"}>
-            Login
-          </Link>
+          <Link to="/login" className="text-blue-500">Login</Link>
         </p>
 
         <p className="text-sm">
-          Want to join as HR?{" "}
-          <Link className="text-blue-500" to={"/hr-register"}>
-            Join as HR Manager
-          </Link>
+          Join as HR?{" "}
+          <Link to="/hr-register" className="text-blue-500">HR Register</Link>
         </p>
       </form>
     </div>

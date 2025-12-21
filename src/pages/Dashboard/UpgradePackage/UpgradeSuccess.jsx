@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSearchParams, Link } from "react-router";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
@@ -8,41 +8,33 @@ const UpgradeSuccess = () => {
   const axiosSecure = useAxiosSecure();
 
   const [result, setResult] = useState(null);
-  
+
+  const calledRef = useRef(false); // ✅ add this
 
   useEffect(() => {
-    if (sessionId) {
-      axiosSecure
-        .patch(`/upgrade-success?session_id=${sessionId}`)
-        .then((res) => {
-          setResult(res.data);
-        });
-    }
-  }, [sessionId, axiosSecure]);
+    if (!sessionId) return;
+    if (calledRef.current) return; // ✅ stop double call
+    calledRef.current = true;
 
-  
+    axiosSecure
+      .patch(`/upgrade-success?session_id=${sessionId}`)
+      .then((res) => setResult(res.data))
+      .catch(console.log);
+  }, [sessionId, axiosSecure]);
 
   return (
     <div className="p-6">
       <h2 className="text-4xl font-bold text-green-600">Upgrade Successful ✅</h2>
 
-      {!sessionId && (
-        <p className="mt-4 text-red-500">
-          No session id found. Please try upgrading again.
-        </p>
-      )}
-
       {result?.success && (
-        <div className="mt-4">
-          <p className="text-lg">
-            Transaction ID: <span className="font-semibold">{result.transactionId}</span>
-          </p>
-        </div>
+        <p className="mt-4 text-lg">
+          Transaction ID: <span className="font-semibold">{result.transactionId}</span>
+        </p>
       )}
 
       <div className="mt-6">
         <Link to="/dashboard/upgrade-package" className="btn btn-accent text-white">
-          Back to Upgrade Package
+          Back
         </Link>
       </div>
     </div>

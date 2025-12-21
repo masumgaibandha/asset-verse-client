@@ -7,79 +7,59 @@ import axios from "axios";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const HRRegister = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm();
+
   const { registerUser, updateUserProfile, logOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const axiosSecure = useAxiosSecure();
 
-  const handleRegistration = (data) => {
-    const profileImg = data.photo[0];
+  const handleRegistration = async (data) => {
+    try {
+      const profileImg = data.photo[0];
 
-    registerUser(data.email, data.password)
-      .then(() => {
-        const formData = new FormData();
-        formData.append("image", profileImg);
+      await registerUser(data.email, data.password);
 
-        const image_API_URL = `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_image_host_key}`;
+      const formData = new FormData();
+      formData.append("image", profileImg);
 
-        axios.post(image_API_URL, formData)
-          .then((res) => {
-            const uploadedUrl = res?.data?.data?.url;
+      const imageApiUrl = `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_image_host_key}`;
+      const imgRes = await axios.post(imageApiUrl, formData);
 
-            const userInfo = {
-              email: data.email,
-              displayName: data.name,
-              photoURL: uploadedUrl,
-              companyName: data.companyName,
-              companyLogo: data.companyLogo,
-              dateOfBirth: data.dateOfBirth,
-              role: "hr",
-              subscription: "basic",
-              packageLimit: 5,
-              createdAt: new Date(),
-            }
+      const uploadedUrl = imgRes?.data?.data?.url;
 
-            axiosSecure.post('/users', userInfo)
-              .then(res => {
-                if (res.data.insertedId) {
-                  console.log('user created in the database')
-                }
-              })
+      const userInfo = {
+        email: data.email,
+        displayName: data.name,
+        photoURL: uploadedUrl,
+        companyName: data.companyName,
+        companyLogo: data.companyLogo,
+        dateOfBirth: data.dateOfBirth,
+        role: "hr",
+        subscription: "basic",
+        packageLimit: 5,
+        createdAt: new Date(),
+      };
 
-            const userProfile = {
-              displayName: data.name,
-              photoURL: uploadedUrl,
-            };
+      await axiosSecure.post("/users", userInfo);
 
-            updateUserProfile(userProfile)
-              .then(() => {
-                // Important: sign out after registration
-                logOut()
-                  .then(() => {
-                    toast.success("Registration successful. Please login.");
-                    navigate("/login", { state: location.state });
-                  })
-                  .catch((error) => {
-                    console.log(error);
-                    toast.error("Logout after register failed");
-                    navigate("/login", { state: location.state });
-                  });
-              })
-              .catch((error) => {
-                console.log(error);
-                toast.error("Profile update failed");
-              });
-          })
-          .catch((error) => {
-            console.log(error);
-            toast.error("Image upload failed");
-          });
-      })
-      .catch((error) => {
-        console.log(error);
-        toast.error("Registration failed");
+      await updateUserProfile({
+        displayName: data.name,
+        photoURL: uploadedUrl,
       });
+
+      await logOut();
+
+      toast.success("Registration successful. Please login.");
+      navigate("/login", { state: location.state });
+    } catch (error) {
+      console.log(error);
+      toast.error("HR registration failed");
+    }
   };
 
   return (
@@ -110,7 +90,7 @@ const HRRegister = () => {
             <p className="text-red-500">Company name is required</p>
           )}
 
-          <label className="label">Company Logo URL (ImgBB/Cloudinary)</label>
+          <label className="label">Company Logo URL</label>
           <input
             type="url"
             {...register("companyLogo", { required: true })}
@@ -163,7 +143,6 @@ const HRRegister = () => {
             className="input"
             placeholder="Password"
           />
-
           {errors.password?.type === "required" && (
             <p className="text-red-500">Password is required</p>
           )}

@@ -1,24 +1,25 @@
-import React from 'react'
-import useAuth from '../hooks/useAuth';
-import useRole from '../hooks/useRole';
-import Loading from '../component/Loading/Loading';
+import { Navigate, useLocation } from "react-router";
+import useAuth from "../hooks/useAuth";
+import useRole from "../hooks/useRole";
 
-const HRRoute = ({children}) => {
-    const {loading} = useAuth();
-    const {role, roleLoading} =useRole()
+const HRRoute = ({ children }) => {
+  const { user, loading } = useAuth();
+  const { role, roleLoading } = useRole();
+  const location = useLocation();
 
-    if(loading || roleLoading){
-        return <Loading></Loading>
-    }
+  if (loading || roleLoading) {
+    return <span className="loading loading-spinner loading-lg"></span>;
+  }
 
-    
-    if(role !== 'hr'){
-        return <div><p className='text-4xl text-red-500'>Access restricted</p></div>
-    }
+  if (!user) {
+    return <Navigate to="/login" state={location.pathname} replace />;
+  }
 
+  if (role !== "hr") {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return children;
-}
+};
 
-export default HRRoute
-
+export default HRRoute;

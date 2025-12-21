@@ -10,22 +10,25 @@ const AssignAssets = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
 
-       const {
+    const {
         data: requests = [],
-        refetch,
+        refetch: refetchRequests,
         isLoading: reqLoading,
     } = useQuery({
-        queryKey: ["requests-all"],
+        queryKey: ["requests", "pending"],
         queryFn: async () => {
-            const res = await axiosSecure.get("/requests");
+            const res = await axiosSecure.get("/requests?requestStatus=pending");
             return res.data;
         },
     });
 
-    // ✅ Load available employees only when modal opens
-    const { data: employees = [], isLoading: empLoading } = useQuery({
-        queryKey: ["employees-available", selectedRequest?._id],
-        enabled: !!selectedRequest?._id,
+    const {
+        data: employees = [],
+        isLoading: empLoading,
+        refetch: refetchEmployees,
+    } = useQuery({
+        queryKey: ["employees", "available"],
+        enabled: false,
         queryFn: async () => {
             const res = await axiosSecure.get(
                 "/employees?status=approved&workStatus=available"
@@ -34,9 +37,10 @@ const AssignAssets = () => {
         },
     });
 
-    const openAssignModal = (request) => {
+    const openAssignModal = async (request) => {
         setSelectedRequest(request);
         setSelectedEmployeeId("");
+        await refetchEmployees();
         modalRef.current?.showModal();
     };
 
@@ -47,7 +51,7 @@ const AssignAssets = () => {
             return Swal.fire("Select Employee", "Please select an employee.", "info");
         }
 
-        const employee = employees.find((e) => e._id === selectedEmployeeId);
+        const employee = employees.find((e) => String(e._id) === String(selectedEmployeeId));
         if (!employee) {
             return Swal.fire("Invalid", "Selected employee not found.", "error");
         }
@@ -59,47 +63,53 @@ const AssignAssets = () => {
         };
 
         try {
-            const res = await axiosSecure.patch(
-                `/requests/${selectedRequest._id}/assign`,
-                payload
-            );
+            await axiosSecure.patch(`/requests/${selectedRequest._id}/assign`, payload);
 
-            const ok =
-                res.data?.requestResult?.modifiedCount > 0 &&
-                res.data?.employeeResult?.modifiedCount > 0;
+            modalRef.current?.close();
+            setSelectedRequest(null);
+            setSelectedEmployeeId("");
+            refetchRequests();
 
-            if (ok) {
+            Swal.fire({
+                position: "top-end",
+                icon: "success",
+                title: "Assigned successfully",
+                showConfirmButton: false,
+                timer: 1500,
+            });
+        } catch (err) {
+            const status = err?.response?.status;
+
+            if (status === 402) {
                 modalRef.current?.close();
-                setSelectedRequest(null);
-                setSelectedEmployeeId("");
-                refetch();
 
                 Swal.fire({
-                    position: "top-end",
-                    icon: "success",
-                    title: "Assigned successfully",
-                    showConfirmButton: false,
-                    timer: 1500,
+                    icon: "warning",
+                    title: "No Credit Left",
+                    text: "Please upgrade your package",
+                    confirmButtonText: "Upgrade",
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.assign("/dashboard/upgrade-package");
+                    }
                 });
-            } else {
-                Swal.fire("Error", "Assign failed. Try again.", "error");
+
+                return;
             }
-        } catch (err) {
+
             console.log(err);
-            Swal.fire("Error", "Assign failed. Check console.", "error");
+            Swal.fire("Error", "Assign failed", "error");
         }
     };
 
-    // ✅ Update status (Complete / Return)
     const handleUpdateStatus = async (request, newStatus) => {
         try {
             const res = await axiosSecure.patch(`/requests/${request._id}/status`, {
                 requestStatus: newStatus,
-                employeeId: request.assignedEmployeeId, // server will make employee available again
             });
 
             if (res.data?.modifiedCount > 0) {
-                refetch();
+                refetchRequests();
                 Swal.fire({
                     position: "top-end",
                     icon: "success",
@@ -120,7 +130,6 @@ const AssignAssets = () => {
         return <span className="loading loading-spinner loading-lg"></span>;
     }
 
-    // optional: show pending first
     const sorted = [...requests].sort((a, b) => {
         const aT = new Date(a.createdAt || 0).getTime();
         const bT = new Date(b.createdAt || 0).getTime();
@@ -161,24 +170,27 @@ const AssignAssets = () => {
                                     <td>{request.employeeName}</td>
                                     <td>{request.employeeEmail}</td>
                                     <td>{request.companyName}</td>
+
                                     <td>
                                         <span
                                             className={`badge ${status === "pending"
-                                                    ? "badge-warning"
-                                                    : status === "assigned"
-                                                        ? "badge-info"
-                                                        : status === "completed"
-                                                            ? "badge-success"
+                                                ? "badge-warning"
+                                                : status === "assigned"
+                                                    ? "badge-info"
+                                                    : status === "completed"
+                                                        ? "badge-success"
+                                                        : status === "returned"
+                                                            ? "badge-neutral"
                                                             : "badge-neutral"
                                                 }`}
                                         >
                                             {status}
                                         </span>
                                     </td>
+
                                     <td>{request.assignedEmployeeName || "-"}</td>
 
                                     <td className="space-x-2">
-                                        {/* ✅ PENDING -> show Assign */}
                                         {isPending && (
                                             <button
                                                 onClick={() => openAssignModal(request)}
@@ -188,7 +200,6 @@ const AssignAssets = () => {
                                             </button>
                                         )}
 
-                                        {/* ✅ ASSIGNED -> show Complete + Return */}
                                         {isAssigned && (
                                             <>
                                                 <button
@@ -207,7 +218,6 @@ const AssignAssets = () => {
                                             </>
                                         )}
 
-                                        {/* ✅ Completed/Returned -> no action */}
                                         {!isPending && !isAssigned && (
                                             <span className="text-xs text-gray-500">No action</span>
                                         )}
@@ -219,7 +229,7 @@ const AssignAssets = () => {
                         {sorted.length === 0 && (
                             <tr>
                                 <td colSpan="9" className="text-center text-gray-500">
-                                    No requests found 🎉
+                                    No pending requests 🎉
                                 </td>
                             </tr>
                         )}
@@ -227,7 +237,6 @@ const AssignAssets = () => {
                 </table>
             </div>
 
-            {/* ✅ Assign Modal */}
             <dialog ref={modalRef} className="modal modal-bottom sm:modal-middle">
                 <div className="modal-box">
                     <h3 className="font-bold text-lg mb-2">Assign Asset</h3>
@@ -255,13 +264,13 @@ const AssignAssets = () => {
                             <select
                                 className="select select-bordered w-full"
                                 value={selectedEmployeeId}
-                                onChange={(e) => setSelectedEmployeeId(e.target.value)}
+                                onChange={(e) => setSelectedEmployeeId(String(e.target.value))}
                             >
-                                <option value="" disabled>
+                                <option value="" disabled hidden>
                                     -- Select an available employee --
                                 </option>
                                 {employees.map((emp) => (
-                                    <option key={emp._id} value={emp._id}>
+                                    <option key={String(emp._id)} value={String(emp._id)}>
                                         {emp.name} ({emp.email})
                                     </option>
                                 ))}

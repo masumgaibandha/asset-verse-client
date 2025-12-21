@@ -1,179 +1,106 @@
-import React, { useMemo, useRef, useState } from "react";
-import useAuth from "../../../hooks/useAuth";
-import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import { useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import Swal from "sweetalert2";
 import { useReactToPrint } from "react-to-print";
+import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAuth from "../../../hooks/useAuth";
 
 const MyAssets = () => {
-  const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
+  const { user } = useAuth();
 
-  const [searchText, setSearchText] = useState("");
-  const [typeFilter, setTypeFilter] = useState("all"); // all | Returnable | Non-returnable
+  const [search, setSearch] = useState("");
+  const [type, setType] = useState("");
 
   const printRef = useRef(null);
 
-  const { data: requests = [], refetch, isLoading } = useQuery({
+  const { data: items = [], isLoading, refetch } = useQuery({
     queryKey: ["my-assets", user?.email],
     enabled: !!user?.email,
     queryFn: async () => {
-      const res = await axiosSecure.get(`/requests?email=${user.email}`);
+      const res = await axiosSecure.get(`/assigned-assets?email=${user.email}`);
       return res.data;
     },
   });
 
-  // ✅ print only this table area
+  const filtered = useMemo(() => {
+    return items.filter((a) => {
+      const nameOk = (a.assetName || "").toLowerCase().includes(search.toLowerCase());
+      const typeOk = type ? a.assetType === type : true;
+      return nameOk && typeOk;
+    });
+  }, [items, search, type]);
+
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
-    documentTitle: "My Assets - AssetVerse",
+    documentTitle: "My Assets",
   });
 
-  const safeDate = (d) => {
-    if (!d) return "N/A";
-    const date = new Date(d);
-    if (Number.isNaN(date.getTime())) return "N/A";
-    return date.toLocaleDateString();
-  };
-
-  const normalizeType = (t) => {
-    if (!t) return "";
-    const lower = String(t).toLowerCase();
-    if (lower.includes("returnable") && !lower.includes("non")) return "Returnable";
-    if (lower.includes("non")) return "Non-returnable";
-    return t;
-  };
-
-  const filtered = useMemo(() => {
-    const text = searchText.trim().toLowerCase();
-
-    return requests.filter((r) => {
-      const name = (r.assetName || "").toLowerCase();
-      const type = normalizeType(r.assetType || r.productType || r.assetTypeName || "");
-
-      const matchText = text ? name.includes(text) : true;
-      const matchType = typeFilter === "all" ? true : type === typeFilter;
-
-      return matchText && matchType;
-    });
-  }, [requests, searchText, typeFilter]);
-
-  // ✅ Employee shouldn't "approve/reject" assets.
-  // Optional: allow deleting a pending request (like "cancel request")
-  const handleCancelRequest = (id) => {
-    Swal.fire({
-      title: "Cancel this request?",
-      text: "This will remove your pending request.",
+  const handleReturn = async (id) => {
+    const ok = await Swal.fire({
       icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Yes, cancel it",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        axiosSecure.delete(`/requests/${id}`).then((res) => {
-          if (res.data?.deletedCount) {
-            refetch();
-            Swal.fire({
-              title: "Cancelled!",
-              text: "Your request has been cancelled.",
-              icon: "success",
-            });
-          }
-        });
-      }
-    });
-  };
-
-  // Optional feature: Return button (requires server PATCH endpoint later)
-  const handleReturn = (request) => {
-    Swal.fire({
       title: "Return this asset?",
-      text: "This will mark the item as returned (if your server supports it).",
-      icon: "question",
       showCancelButton: true,
       confirmButtonText: "Yes, return",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        axiosSecure
-          .patch(`/requests/${request._id}/return`, { status: "returned" })
-          .then((res) => {
-            if (res.data?.modifiedCount) {
-              refetch();
-              Swal.fire({
-                title: "Returned!",
-                text: "Asset return submitted successfully.",
-                icon: "success",
-              });
-            } else {
-              Swal.fire({
-                title: "Not Implemented",
-                text: "Return API is not implemented yet on server.",
-                icon: "info",
-              });
-            }
-          })
-          .catch(() => {
-            Swal.fire({
-              title: "Not Implemented",
-              text: "Return API is not implemented yet on server.",
-              icon: "info",
-            });
-          });
-      }
     });
+
+    if (!ok.isConfirmed) return;
+
+    try {
+      const res = await axiosSecure.patch(`/assigned-assets/${id}/return`);
+      if (res.data?.modifiedCount > 0) {
+        refetch();
+        Swal.fire({
+          position: "top-end",
+          icon: "success",
+          title: "Returned",
+          showConfirmButton: false,
+          timer: 1200,
+        });
+      }
+    } catch (err) {
+      Swal.fire("Error", err.response?.data?.message || "Return failed", "error");
+    }
   };
 
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <span className="loading loading-spinner loading-lg"></span>
-      </div>
-    );
-  }
+  if (isLoading) return <span className="loading loading-spinner loading-lg"></span>;
 
   return (
     <div className="p-6">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div>
-          <h2 className="text-3xl font-bold text-secondary">
-            My Assets ({filtered.length})
-          </h2>
-          <p className="text-sm text-gray-500">
-            Search, filter, print, and manage your assigned assets.
-          </p>
-        </div>
+        <h2 className="text-4xl font-bold">My Assets</h2>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search */}
-          <label className="input input-bordered flex items-center gap-2">
-            <input
-              type="text"
-              className="grow"
-              placeholder="Search by asset name..."
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-            />
-          </label>
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            className="input input-bordered"
+            placeholder="Search by asset name"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
 
-          {/* Filter */}
           <select
             className="select select-bordered"
-            value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
+            value={type}
+            onChange={(e) => setType(e.target.value)}
           >
-            <option value="all">All Types</option>
+            <option value="">All Types</option>
             <option value="Returnable">Returnable</option>
             <option value="Non-returnable">Non-returnable</option>
           </select>
 
-          {/* Print */}
           <button onClick={handlePrint} className="btn btn-accent text-white">
             Print
           </button>
         </div>
       </div>
 
-      {/* Printable area */}
-      <div ref={printRef} className="bg-base-100 rounded-xl p-4 shadow-sm border">
+      <div ref={printRef}>
+        <div className="mb-4 hidden print:block">
+          <h3 className="text-2xl font-bold">AssetVerse - Employee Asset Report</h3>
+          <p className="text-sm">Employee: {user?.email}</p>
+          <p className="text-sm">Generated: {new Date().toLocaleString()}</p>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="table table-zebra">
             <thead>
@@ -185,91 +112,47 @@ const MyAssets = () => {
                 <th>Request Date</th>
                 <th>Approval Date</th>
                 <th>Status</th>
-                <th className="text-right">Action</th>
+                <th className="print:hidden">Action</th>
               </tr>
             </thead>
 
             <tbody>
-              {filtered.map((r, index) => {
-                const assetType = normalizeType(r.assetType || r.productType);
-                const status = r.requestStatus || "pending";
-
-                const canReturn =
-                  status === "approved" &&
-                  assetType === "Returnable";
-
-                const canCancel = status === "pending";
+              {filtered.map((a, idx) => {
+                const canReturn = a.assetType === "Returnable" && a.status === "assigned";
 
                 return (
-                  <tr key={r._id}>
-                    <th>{index + 1}</th>
-
-                    {/* Asset (image + name) */}
-                    <td>
-                      <div className="flex items-center gap-3">
-                        <div className="avatar">
-                          <div className="mask mask-squircle h-10 w-10">
-                            <img
-                              src={
-                                r.assetImage ||
-                                r.productImage ||
-                                "https://i.ibb.co/8LRrxWQR/Masum2.png"
-                              }
-                              alt="asset"
-                            />
-                          </div>
-                        </div>
-                        <div>
-                          <div className="font-semibold">{r.assetName || "N/A"}</div>
-                          <div className="text-xs text-gray-500">
-                            Qty: {r.assetQTY ?? "N/A"}
-                          </div>
-                        </div>
+                  <tr key={a._id}>
+                    <th>{idx + 1}</th>
+                    <td className="flex items-center gap-3">
+                      <img
+                        src={a.assetImage}
+                        alt={a.assetName}
+                        className="w-12 h-12 rounded-lg object-cover"
+                      />
+                      <div>
+                        <p className="font-semibold">{a.assetName}</p>
+                        <p className="text-xs text-gray-500">QTY: {a.assetQTY || 1}</p>
                       </div>
                     </td>
-
-                    <td>{assetType || "N/A"}</td>
-                    <td>{r.companyName || "N/A"}</td>
-                    <td>{safeDate(r.requestDate || r.createdAt)}</td>
-                    <td>{safeDate(r.approvalDate)}</td>
-
+                    <td>{a.assetType}</td>
+                    <td>{a.companyName}</td>
+                    <td>{a.requestDate ? new Date(a.requestDate).toLocaleDateString() : "-"}</td>
+                    <td>{a.approvalDate ? new Date(a.approvalDate).toLocaleDateString() : "-"}</td>
                     <td>
-                      <span
-                        className={`badge ${
-                          status === "approved"
-                            ? "badge-success"
-                            : status === "rejected"
-                            ? "badge-error"
-                            : status === "returned"
-                            ? "badge-info"
-                            : "badge-warning"
-                        }`}
-                      >
-                        {status}
+                      <span className={`badge ${a.status === "returned" ? "badge-neutral" : "badge-success"}`}>
+                        {a.status}
                       </span>
                     </td>
-
-                    <td className="text-right">
-                      {canReturn && (
+                    <td className="print:hidden">
+                      {canReturn ? (
                         <button
-                          onClick={() => handleReturn(r)}
-                          className="btn btn-sm btn-primary text-white"
+                          onClick={() => handleReturn(a._id)}
+                          className="btn btn-warning btn-sm text-white"
                         >
                           Return
                         </button>
-                      )}
-
-                      {canCancel && (
-                        <button
-                          onClick={() => handleCancelRequest(r._id)}
-                          className="btn btn-sm btn-outline ml-2"
-                        >
-                          Cancel
-                        </button>
-                      )}
-
-                      {!canReturn && !canCancel && (
-                        <span className="text-xs text-gray-500">No action</span>
+                      ) : (
+                        <span className="text-xs text-gray-500">N/A</span>
                       )}
                     </td>
                   </tr>
@@ -278,8 +161,8 @@ const MyAssets = () => {
 
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="text-center py-8 text-gray-500">
-                    No assets found.
+                  <td colSpan="8" className="text-center text-gray-500">
+                    No assets found
                   </td>
                 </tr>
               )}
@@ -287,12 +170,6 @@ const MyAssets = () => {
           </table>
         </div>
       </div>
-
-      {/* NOTE for you */}
-      <p className="text-xs text-gray-500 mt-3">
-        Note: The “Return” action needs a server endpoint like <span className="font-mono">PATCH /requests/:id/return</span>.
-        If you haven’t created it yet, the page will show “Not Implemented”.
-      </p>
     </div>
   );
 };

@@ -22,6 +22,11 @@ import HRRoute from './HRRoute';
 import AssignAssets from '../pages/Dashboard/AssignAssets/AssignAssets';
 import EmployeeRoutes from './EmployeeRoutes';
 import DashboardHome from '../pages/Dashboard/DashboardHome/DashboardHome';
+import AssetList from '../pages/Dashboard/AssetList/AssetList';
+import AddAsset from '../pages/Dashboard/AddAsset/AddAsset';
+import AllRequests from '../pages/Dashboard/AllRequests/AllRequests';
+import RequestAsset from '../pages/EmployeeDashboard/RequestAsset/RequestAsset';
+import MyTeam from '../pages/Dashboard/MyTeam/MyTeam';
 
 
 
@@ -43,46 +48,55 @@ export const router = createBrowserRouter([
         path: 'asset-request',
         element: <PrivateRoute><AssetRequest></AssetRequest></PrivateRoute>
       },
-      
+
       {
-    path: 'asset-overview',
-    Component: AssetOverview,
-    loader: () => fetch('/companyLocations.json').then(res => res.json())
-  }
-]
+        path: 'asset-overview',
+        Component: AssetOverview,
+        loader: () => fetch('/companyLocations.json').then(res => res.json())
+      }
+    ]
   },
-{
-  path: '/',
+  {
+    path: '/',
     Component: AuthLayout,
-      children: [
-        {
-          path: 'login',
-          Component: Login
-        },
-        {
-          path: 'employee-register',
-          Component: EmployeeRegister
-        },
-        {
-          path: 'hr-register',
-          Component: HRRegister
-        }
-      ]
-},
-{
-  path: 'dashboard',
+    children: [
+      {
+        path: 'login',
+        Component: Login
+      },
+      {
+        path: 'employee-register',
+        Component: EmployeeRegister
+      },
+      {
+        path: 'hr-register',
+        Component: HRRegister
+      }
+    ]
+  },
+  {
+    path: 'dashboard',
     element: <PrivateRoute><DashboardLayout></DashboardLayout></PrivateRoute>,
-      children: [
-        {
-            index: true,
-            Component: DashboardHome
-        },
-        {
-          path: 'my-assets',
-          element: <EmployeeRoutes><MyAssets></MyAssets></EmployeeRoutes>
-        },
-              // HR Routes
-        {
+    children: [
+      {
+        index: true,
+        Component: DashboardHome
+      },
+      {
+        path: 'my-assets',
+        element: <EmployeeRoutes><MyAssets></MyAssets></EmployeeRoutes>
+      },
+      {
+        path: "request-asset",
+        element: <EmployeeRoutes><RequestAsset /></EmployeeRoutes>
+      },
+      {
+        path: "my-team",
+        element: <EmployeeRoutes><MyTeam /></EmployeeRoutes>
+      },
+      
+      // HR Routes
+      {
         path: 'upgrade-package',
         element: <HRRoute><UpgradePackage></UpgradePackage></HRRoute>
       },
@@ -111,9 +125,21 @@ export const router = createBrowserRouter([
         path: 'users-management',
         // Component: UsersManagement
         element: <HRRoute><UsersManagement></UsersManagement></HRRoute>
+      },
+      {
+        path: "asset-list",
+        element: <HRRoute><AssetList /></HRRoute>
+      },
+      {
+        path: "add-asset",
+        element: <HRRoute><AddAsset /></HRRoute>
+      },
+      {
+        path: "all-requests",
+        element: <HRRoute><AllRequests /></HRRoute>
       }
-      ]
-}
+    ]
+  }
 ]);
 
 

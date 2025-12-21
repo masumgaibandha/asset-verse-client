@@ -1,169 +1,341 @@
-import { useQuery } from "@tanstack/react-query";
-import Swal from "sweetalert2";
-import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import React from "react";
+import { Link, NavLink } from "react-router";
+import useAuth from "../../../../hooks/useAuth";
+import { toast } from "react-toastify";
 
-const AssignAssets = () => {
-    const axiosSecure = useAxiosSecure();
+const Navbar = () => {
+    const { user, logOut } = useAuth();
 
-    // 1) Load all requests 
-    const {data: requests = [], refetch: refetchRequests, isLoading: reqLoading, } = useQuery({
-        queryKey: ["asset-requests"],
-        queryFn: async () => {
-            const res = await axiosSecure.get("/requests");
-            return res.data;
-        },
-    });
-
-    // 2) Load approved employees
-    const { data: employees = [], isLoading: empLoading } = useQuery({
-        queryKey: ["approved-employees"],
-        queryFn: async () => {
-            const res = await axiosSecure.get("/employees?status=approved");
-            return res.data;
-        },
-    });
-
-    // only pending requests show 
-    const pendingRequests = requests.filter(
-        (r) => r.requestStatus === "pending"
-    );
-
-    const handleAssign = async (request) => {
-        const optionsHtml = employees
-            .map(
-                (e) =>
-                    `<option value="${e.email}">${e.name || e.displayName || e.email}</option>`
-            )
-            .join("");
-
-        const result = await Swal.fire({
-            title: "Assign Asset",
-            html: `
-        <div style="text-align:left">
-          <p><b>Asset:</b> ${request.assetName || "N/A"}</p>
-          <p><b>Qty:</b> ${request.assetQty || request.quantity || "N/A"}</p>
-          <p style="margin-top:10px"><b>Select Employee</b></p>
-          <select id="employeeEmail" class="swal2-select" style="width:100%">
-            <option value="">-- select employee --</option>
-            ${optionsHtml}
-          </select>
-        </div>
-      `,
-            showCancelButton: true,
-            confirmButtonText: "Assign",
-            preConfirm: () => {
-                const employeeEmail = document.getElementById("employeeEmail").value;
-                if (!employeeEmail) {
-                    Swal.showValidationMessage("Please select an employee");
-                    return false;
-                }
-                return { employeeEmail };
-            },
-        });
-
-        if (!result.isConfirmed) return;
-
-        const employeeEmail = result.value.employeeEmail;
-        const selectedEmployee = employees.find((e) => e.email === employeeEmail);
-
-        // IMPORTANT:
-        // This API must exist in server:
-        // PATCH /requests/:id  { requestStatus:'approved', assignedToEmail, assignedToName, approvalDate }
-        const payload = {
-            requestStatus: "approved",
-            assignedToEmail: employeeEmail,
-            assignedToName:
-                selectedEmployee?.name ||
-                selectedEmployee?.displayName ||
-                employeeEmail,
-            approvalDate: new Date(),
-        };
-
-        const res = await axiosSecure.patch(`/requests/${request._id}`, payload);
-
-        if (res.data.modifiedCount) {
-            refetchRequests();
-            Swal.fire({
-                position: "top-end",
-                icon: "success",
-                title: "Asset assigned successfully",
-                showConfirmButton: false,
-                timer: 1500,
-            });
-        }
+    const handleLogOut = () => {
+        logOut()
+            .then(() => toast.success("Log Out Successful"))
+            .catch(() => toast.error("Log Out Failed"));
     };
 
-    if (reqLoading || empLoading) {
-        return <span className="loading loading-infinity loading-lg"></span>;
-    }
-
     return (
-        <div>
-            <h2 className="text-4xl font-bold mb-6">
-                Assign Assets (Pending): {pendingRequests.length}
-            </h2>
+        <div className="navbar bg-base-100 shadow-sm sticky top-0 z-50 mb-12">
+            <div className="w-full max-w-7xl mx-auto px-3 flex justify-between items-center">
+                {/* Logo */}
 
-            {employees.length === 0 && (
-                <div className="alert alert-warning mb-6">
-                    <span>
-                        No approved employees found. Approve employees first, then assign.
-                    </span>
-                </div>
-            )}
+                <Link to="/" className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <span className="text-primary font-bold text-lg">AV</span>
+                    </div>
+                    <span className="text-xl font-semibold tracking-tight">AssetVerse</span>
+                </Link>
 
-            <div className="overflow-x-auto">
-                <table className="table table-zebra">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Asset</th>
-                            <th>Qty</th>
-                            <th>Employee</th>
-                            <th>Employee Email</th>
-                            <th>Company</th>
-                            <th>Status</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
+                {/* Center Menu */}
+                <ul className="menu menu-horizontal px-1 text-[16px] gap-1">
+                    <li>
+                        <NavLink to="/">Home</NavLink>
+                    </li>
 
-                    <tbody>
-                        {pendingRequests.map((req, index) => (
-                            <tr key={req._id}>
-                                <th>{index + 1}</th>
-                                <td>{req.assetName}</td>
-                                <td>{req.assetQty || req.quantity || "-"}</td>
-                                <td>{req.employeeName}</td>
-                                <td>{req.employeeEmail}</td>
-                                <td>{req.companyName}</td>
-                                <td>
-                                    <span className="badge badge-warning">
-                                        {req.requestStatus}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button
-                                        disabled={employees.length === 0}
-                                        onClick={() => handleAssign(req)}
-                                        className="btn btn-xs btn-accent text-white"
-                                    >
-                                        Assign
+                    {!user && (
+                        <>
+                            <li>
+                                <NavLink to="/employee-register">Join as Employee</NavLink>
+                            </li>
+                            <li>
+                                <NavLink to="/hr-register">Join as HR Manager</NavLink>
+                            </li>
+                        </>
+                    )}
+
+                    {user && (
+                        <>
+                            {/* Employee Page (like instructor rider page style) */}
+                            <li>
+                                <NavLink to="/employee">Employee</NavLink>
+                            </li>
+
+                            {/* Dashboard shortcut */}
+                            <li>
+                                <NavLink to="/dashboard">Dashboard</NavLink>
+                            </li>
+
+
+                        </>
+                    )}
+                </ul>
+
+                {/* Right Side */}
+                <div className="flex items-center gap-3">
+                    {!user ? (
+                        <Link className="btn btn-accent text-white" to="/login">
+                            Login
+                        </Link>
+                    ) : (
+                        <div className="dropdown dropdown-end">
+                            {/* profile image button */}
+                            <div tabIndex={0} role="button" className="btn btn-ghost btn-circle avatar">
+                                <div className="w-10 rounded-full">
+                                    <img
+                                        alt="profile"
+                                        src={user?.photoURL || "https://i.ibb.co/4pDNDk1/avatar.png"}
+                                    />
+                                </div>
+                            </div>
+
+                            {/* dropdown menu */}
+                            <ul
+                                tabIndex={0}
+                                className="menu dropdown-content mt-3 z-[1] w-56 rounded-box bg-base-100 p-2 shadow"
+                            >
+                                <li className="px-2 py-1 text-sm opacity-70">
+                                    {user?.displayName || "User"} <br />
+                                    <span className="text-xs">{user?.email}</span>
+                                </li>
+
+                                <div className="divider my-1"></div>
+
+                                {/* Employee menu (temporary) */}
+                                <li><NavLink to="/dashboard/my-assets">My Assets</NavLink></li>
+                                <li><NavLink to="/dashboard/my-team">My Team</NavLink></li>
+                                <li><NavLink to="/asset-request">Request Asset</NavLink></li>
+                                <li><NavLink to="/dashboard/profile">Profile</NavLink></li>
+
+                                <div className="divider my-1"></div>
+
+                                {/* HR menu (temporary) */}
+                                <li><NavLink to="/dashboard/asset-list">Asset List</NavLink></li>
+                                <li><NavLink to="/dashboard/add-asset">Add Asset</NavLink></li>
+                                <li><NavLink to="/dashboard/all-requests">All Requests</NavLink></li>
+                                <li><NavLink to="/dashboard/employee-list">Employee List</NavLink></li>
+
+                                <div className="divider my-1"></div>
+
+                                <li>
+                                    <button onClick={handleLogOut} className="text-red-500">
+                                        Logout
                                     </button>
-                                </td>
-                            </tr>
-                        ))}
-
-                        {pendingRequests.length === 0 && (
-                            <tr>
-                                <td colSpan="8" className="text-center text-gray-500">
-                                    No pending requests 🎉
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+                                </li>
+                            </ul>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
 };
 
-export default AssignAssets;
+export default Navbar;
+
+
+import React from 'react'
+import { Link, NavLink, Outlet } from 'react-router'
+import { PiBuildingOfficeLight } from "react-icons/pi";
+import { TbPackages } from "react-icons/tb";
+import { FaBoxOpen, FaClipboardList, FaHandHolding, FaHandsHelping, FaPlusSquare, FaRegCreditCard, FaUsers } from "react-icons/fa";
+import { IoMdPeople } from 'react-icons/io';
+import { FcApproval } from "react-icons/fc";
+import useRole from '../hooks/useRole';
+import { MdInventory } from "react-icons/md";
+
+const DashboardLayout = () => {
+
+    const { role, roleLoading } = useRole();
+
+    if (roleLoading) {
+        return <span className="loading loading-spinner loading-lg"></span>;
+        // or: return <Loading />
+    }
+
+    return (
+        <div className="drawer lg:drawer-open container mx-auto">
+            <input id="my-drawer-4" type="checkbox" className="drawer-toggle" />
+            <div className="drawer-content">
+                {/* Navbar */}
+                <nav className="navbar w-full bg-base-300">
+                    <label htmlFor="my-drawer-4" aria-label="open sidebar" className="btn btn-square btn-ghost">
+                        {/* Sidebar toggle icon */}
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor" className="my-1.5 inline-block size-4"><path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path><path d="M9 4v16"></path><path d="M14 10l2 2l-2 2"></path></svg>
+                    </label>
+                    <div className="px-4">AssetVerse DashBoard</div>
+                </nav>
+                {/* Page content here */}
+                <Outlet></Outlet>
+
+            </div>
+
+            <div className="drawer-side is-drawer-close:overflow-visible">
+                <label htmlFor="my-drawer-4" aria-label="close sidebar" className="drawer-overlay"></label>
+                <div className="flex min-h-full flex-col items-start bg-base-200 is-drawer-close:w-14 is-drawer-open:w-64">
+                    {/* Sidebar content here */}
+                    <ul className="menu w-full grow">
+                        {/* List item */}
+
+                        <Link to="/" className="flex items-center gap-2">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                <span className="text-primary font-bold text-lg">AV</span>
+                            </div>
+                        </Link>
+
+                        <li>
+                            <Link to={'/dashboard'} className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Homepage">
+                                {/* Home icon */}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor" className="my-1.5 inline-block size-4"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
+                                <span className="is-drawer-close:hidden">Homepage</span>
+                            </Link>
+                        </li>
+
+                        {/* Our DashBoard Link here */}
+
+                        {/* <li>
+                            <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pl-2" data-tip="MyAssets" to={'/dashboard/my-assets'}>
+                                <PiBuildingOfficeLight size={20} />
+                                <span className="is-drawer-close:hidden">My Assets</span>
+                            </NavLink>
+                        </li> */}
+
+
+
+
+
+
+                        {/* Employee route */}
+                        {role === "employee" && (
+                            <>
+                                <li>
+                                    {/* <NavLink to="/dashboard/my-assets"> My Assets</NavLink> */}
+
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="My Assets" to={'/dashboard/my-assets'}>
+                                        <MdInventory size={25} />
+                                        <span className="is-drawer-close:hidden">My Assets</span>
+                                    </NavLink>
+                                </li>
+
+                                <li>
+                                    <NavLink
+                                        className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2"
+                                        data-tip="Request Asset"
+                                        to="/dashboard/request-asset"
+                                    >
+                                        <FaHandHolding size={20} />
+                                        <span className="is-drawer-close:hidden">Request Asset</span>
+                                    </NavLink>
+                                </li>
+
+                                <li>
+                                    <NavLink
+                                        className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2"
+                                        data-tip="My Team"
+                                        to="/dashboard/my-team"
+                                    >
+                                        <FaUsers size={20} />
+                                        <span className="is-drawer-close:hidden">My Team</span>
+                                    </NavLink>
+                                </li>
+
+
+                            </>
+                        )}
+
+
+
+                        {/* hr only routes */}
+                        {
+                            role === 'hr' && <>
+                                {/* Approve Employee */}
+                                <li>
+
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="Approve Employees" to={'/dashboard/approve-employees'}>
+                                        <FcApproval size={25} />
+
+
+                                        <span className="is-drawer-close:hidden">Approve Employees</span>
+                                    </NavLink>
+                                </li>
+                                {/* Assign Assets */}
+                                <li>
+
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="Assign Assets" to={'/dashboard/assign-assets'}>
+                                        <FaHandsHelping size={25} />
+
+
+                                        <span className="is-drawer-close:hidden">Assign Assets</span>
+                                    </NavLink>
+                                </li>
+                                {/* Users Management */}
+                                <li>
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="Users Management" to={'/dashboard/users-management'}>
+                                        <IoMdPeople size={20} />
+                                        {/* <FaUsers size={20}/> */}
+                                        <span className="is-drawer-close:hidden">Users Management</span>
+                                    </NavLink>
+                                </li>
+
+                                <li>
+                                    {/* Upgrade package */}
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="upgradePackage" to={'/dashboard/upgrade-package'}>
+                                        <TbPackages size={20} />
+                                        <span className="is-drawer-close:hidden">Upgrade Package</span>
+                                    </NavLink>
+                                </li>
+
+                                <li>
+                                    {/* Payment History */}
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="paymentHistory" to={'/dashboard/payment-history'}>
+                                        <FaRegCreditCard size={20} />
+                                        <span className="is-drawer-close:hidden">Payment History</span>
+                                    </NavLink>
+                                </li>
+
+                                <li>
+                                    <NavLink
+                                        className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2"
+                                        data-tip="Asset List"
+                                        to="/dashboard/asset-list"
+                                    >
+                                        <MdInventory size={20} />
+                                        <span className="is-drawer-close:hidden">Asset List</span>
+                                    </NavLink>
+                                </li>
+
+                                <li>
+                                    <NavLink
+                                        className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2"
+                                        data-tip="Add Asset"
+                                        to="/dashboard/add-asset"
+                                    >
+                                        <FaPlusSquare size={20} />
+                                        <span className="is-drawer-close:hidden">Add Asset</span>
+                                    </NavLink>
+                                </li>
+
+                                <li>
+                                    <NavLink
+                                        className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2"
+                                        data-tip="All Requests"
+                                        to="/dashboard/all-requests"
+                                    >
+                                        <FaClipboardList size={20} />
+                                        <span className="is-drawer-close:hidden">All Requests</span>
+                                    </NavLink>
+                                </li>
+
+                            </>
+                        }
+
+
+
+
+
+
+                        {/* List item */}
+                        <li>
+                            <button className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Settings">
+                                {/* Settings icon */}
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor" className="my-1.5 inline-block size-4"><path d="M20 7h-9"></path><path d="M14 17H5"></path><circle cx="17" cy="17" r="3"></circle><circle cx="7" cy="7" r="3"></circle></svg>
+                                <span className="is-drawer-close:hidden">Settings</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    )
+}
+
+export default DashboardLayout
+
+

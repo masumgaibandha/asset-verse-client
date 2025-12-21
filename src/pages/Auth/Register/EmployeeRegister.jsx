@@ -6,58 +6,82 @@ import { Link, useLocation, useNavigate } from "react-router";
 import axios from "axios";
 
 const EmployeeRegister = () => {
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm();
+
   const { registerUser, updateUserProfile, logOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const handleRegistration = (data) => {
-    const profileImg = data.photo[0];
+  const handleRegistration = async (data) => {
+    try {
+      const profileImg = data.photo?.[0];
+      if (!profileImg) {
+        toast.error("Photo is required");
+        return;
+      }
 
-    registerUser(data.email, data.password)
-      .then(() => {
-        const formData = new FormData();
-        formData.append("image", profileImg);
+      // 1) Firebase register
+      await registerUser(data.email, data.password);
 
-        const image_API_URL = `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_image_host_key}`;
+      // 2) Upload image to imgbb
+      const formData = new FormData();
+      formData.append("image", profileImg);
 
-        axios.post(image_API_URL, formData)
-          .then((res) => {
-            const uploadedUrl = res?.data?.data?.url;
+      const image_API_URL = `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_image_host_key
+        }`;
 
-            const userProfile = {
-              displayName: data.name,
-              photoURL: uploadedUrl,
-            };
+      const imgRes = await axios.post(image_API_URL, formData);
+      const uploadedUrl = imgRes?.data?.data?.url;
 
-            updateUserProfile(userProfile)
-              .then(() => {
-                // ✅ Important: sign out after registration
-                logOut()
-                  .then(() => {
-                    toast.success("Registration successful. Please login.");
-                    navigate("/login", { state: location.state });
-                  })
-                  .catch((error) => {
-                    console.log(error);
-                    toast.error("Logout after register failed");
-                    navigate("/login", { state: location.state });
-                  });
-              })
-              .catch((error) => {
-                console.log(error);
-                toast.error("Profile update failed");
-              });
-          })
-          .catch((error) => {
-            console.log(error);
-            toast.error("Image upload failed");
-          });
-      })
-      .catch((error) => {
-        console.log(error);
-        toast.error("Registration failed");
-      });
+      if (!uploadedUrl) {
+        toast.error("Image upload failed");
+        return;
+      }
+
+      // 3) Update Firebase profile
+      const userProfile = {
+        displayName: data.name,
+        photoURL: uploadedUrl,
+      };
+      await updateUserProfile(userProfile);
+
+      // 4) Save user to MongoDB
+      const userInfo = {
+        email: data.email,
+        displayName: data.name,
+        photoURL: uploadedUrl,
+        role: "user",
+        createdAt: new Date(),
+      };
+      await axios.post("http://localhost:3000/users", userInfo);
+
+      // 5) Save employee pending record (for approve-employees page)
+      const employeeInfo = {
+        name: data.name,
+        email: data.email,
+        dateOfBirth: data.dateOfBirth,
+        photoURL: uploadedUrl,
+        companyName: "", // keep empty if not collected here
+        designation: "",
+        createdAt: new Date(),
+      };
+      await axios.post("http://localhost:3000/employees", employeeInfo);
+
+      // 6) Force logout after register (your flow)
+      await logOut();
+
+      toast.success("Registration successful. Please login.");
+      reset();
+      navigate("/login", { state: location.state });
+    } catch (error) {
+      console.log(error);
+      toast.error(error?.message || "Registration failed");
+    }
   };
 
   return (
@@ -73,9 +97,7 @@ const EmployeeRegister = () => {
             className="input"
             placeholder="Your Name"
           />
-          {errors.name?.type === "required" && (
-            <p className="text-red-500">Please input your name</p>
-          )}
+          {errors.name && <p className="text-red-500">Please input your name</p>}
 
           <label className="label">Date of Birth</label>
           <input
@@ -83,19 +105,18 @@ const EmployeeRegister = () => {
             {...register("dateOfBirth", { required: true })}
             className="input"
           />
-          {errors.dateOfBirth?.type === "required" && (
+          {errors.dateOfBirth && (
             <p className="text-red-500">Please select your date of birth</p>
           )}
 
           <label className="label">Your Photo</label>
           <input
             type="file"
+            accept="image/*"
             {...register("photo", { required: true })}
             className="file-input"
           />
-          {errors.photo?.type === "required" && (
-            <p className="text-red-500">Photo is required</p>
-          )}
+          {errors.photo && <p className="text-red-500">Photo is required</p>}
 
           <label className="label">Email</label>
           <input
@@ -104,7 +125,7 @@ const EmployeeRegister = () => {
             className="input"
             placeholder="Email"
           />
-          {errors.email?.type === "required" && (
+          {errors.email && (
             <p className="text-red-500">Please input valid email</p>
           )}
 
@@ -132,7 +153,12 @@ const EmployeeRegister = () => {
             </p>
           )}
 
-          <button className="btn btn-accent text-white mt-4">Register</button>
+          <button
+            disabled={isSubmitting}
+            className="btn btn-accent text-white mt-4"
+          >
+            {isSubmitting ? "Registering..." : "Register"}
+          </button>
         </fieldset>
 
         <p>

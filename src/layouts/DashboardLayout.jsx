@@ -2,10 +2,13 @@ import React from 'react'
 import { Link, NavLink, Outlet } from 'react-router'
 import { PiBuildingOfficeLight } from "react-icons/pi";
 import { TbPackages } from "react-icons/tb";
-import { FaRegCreditCard, FaUsers } from "react-icons/fa";
+import { FaBoxOpen, FaHandsHelping, FaRegCreditCard, FaUsers } from "react-icons/fa";
 import { IoMdPeople } from 'react-icons/io';
 import { FcApproval } from "react-icons/fc";
 import useRole from '../hooks/useRole';
+import { MdInventory } from "react-icons/md";
+
+
 
 
 
@@ -14,7 +17,12 @@ import useRole from '../hooks/useRole';
 
 const DashboardLayout = () => {
 
-    const { role } = useRole();
+    const { role, roleLoading } = useRole();
+
+    if (roleLoading) {
+        return <span className="loading loading-spinner loading-lg"></span>;
+        // or: return <Loading />
+    }
 
     return (
         <div className="drawer lg:drawer-open container mx-auto">
@@ -49,30 +57,35 @@ const DashboardLayout = () => {
 
                         {/* Our DashBoard Link here */}
 
-                        <li>
+                        {/* <li>
                             <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pl-2" data-tip="MyAssets" to={'/dashboard/my-assets'}>
                                 <PiBuildingOfficeLight size={20} />
                                 <span className="is-drawer-close:hidden">My Assets</span>
                             </NavLink>
-                        </li>
+                        </li> */}
 
 
-                        <li>
-                            {/* Upgrade package */}
-                            <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="upgradePackage" to={'/dashboard/upgrade-package'}>
-                                <TbPackages size={20} />
-                                <span className="is-drawer-close:hidden">Upgrade Package</span>
-                            </NavLink>
-                        </li>
 
-                        <li>
-                            {/* Payment History */}
-                            <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="paymentHistory" to={'/dashboard/payment-history'}>
-                                <FaRegCreditCard size={20} />
-                                <span className="is-drawer-close:hidden">Payment History</span>
-                            </NavLink>
-                        </li>
 
+
+
+                        {/* Employee route */}
+                        {role === "employee" && (
+                            <>
+                                <li>
+                                    {/* <NavLink to="/dashboard/my-assets"> My Assets</NavLink> */}
+
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="My Assets" to={'/dashboard/my-assets'}>
+                                        <MdInventory  size={25} />
+                                        <span className="is-drawer-close:hidden">My Assets</span>
+                                    </NavLink>
+                                </li>
+                            </>
+                        )}
+
+
+
+                        {/* hr only routes */}
                         {
                             role === 'hr' && <>
                                 {/* Approve Employee */}
@@ -85,6 +98,16 @@ const DashboardLayout = () => {
                                         <span className="is-drawer-close:hidden">Approve Employees</span>
                                     </NavLink>
                                 </li>
+                                {/* Assign Assets */}
+                                <li>
+
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="Assign Assets" to={'/dashboard/assign-assets'}>
+                                        <FaHandsHelping size={25} />
+
+
+                                        <span className="is-drawer-close:hidden">Assign Assets</span>
+                                    </NavLink>
+                                </li>
                                 {/* Users Management */}
                                 <li>
                                     <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="Users Management" to={'/dashboard/users-management'}>
@@ -93,9 +116,25 @@ const DashboardLayout = () => {
                                         <span className="is-drawer-close:hidden">Users Management</span>
                                     </NavLink>
                                 </li>
+
+                                <li>
+                                    {/* Upgrade package */}
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="upgradePackage" to={'/dashboard/upgrade-package'}>
+                                        <TbPackages size={20} />
+                                        <span className="is-drawer-close:hidden">Upgrade Package</span>
+                                    </NavLink>
+                                </li>
+
+                                <li>
+                                    {/* Payment History */}
+                                    <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="paymentHistory" to={'/dashboard/payment-history'}>
+                                        <FaRegCreditCard size={20} />
+                                        <span className="is-drawer-close:hidden">Payment History</span>
+                                    </NavLink>
+                                </li>
                             </>
                         }
-                        {/* Masum */}
+
 
 
 

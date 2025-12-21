@@ -101,7 +101,8 @@ const ApproveEmployees = () => {
                             <th>Email</th>
                             <th>Company</th>
                             <th>Designation</th>
-                            <th>Status</th>
+                            <th>Application Status</th>
+                            <th>Work Status</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -116,19 +117,16 @@ const ApproveEmployees = () => {
                                 <td>{employee.designation}</td>
                                
                                 <td>
-                                    {/* <span className="badge badge-warning">{employee.status}</span> */}
-                                    <p className={`${employee.status === 'approved' ? 'text-green-800 font-extrabold' : 'text-red-600'}`}>{employee.status}</p>
+                                     <p className={`${employee.status === 'approved' ? 'text-green-800 font-extrabold' : 'text-red-600'}`}>{employee.status}</p></td>
 
-                                </td>
+                                     <td>{employee.workStatus}</td>
+
                                   <td className="space-x-2">
-
                                     <button
                                         onClick={() => handleApproval(employee)}
                                         // employee._id
-                                        className="btn btn-xs btn-success"
-                                    >
-                                        Approved
-                                    </button>
+                                        className="btn btn-xs btn-success">
+                                        Approved </button>
 
                                     <button
                                         onClick={() => handleReject(employee)}

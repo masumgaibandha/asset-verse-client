@@ -19,6 +19,8 @@ import PaymentHistory from '../pages/Dashboard/PaymentHistory/PaymentHistory';
 import ApproveEmployees from '../pages/Dashboard/ApproveEmployees/ApproveEmployees';
 import UsersManagement from '../pages/Dashboard/UsersManagement/UsersManagement';
 import HRRoute from './HRRoute';
+import AssignAssets from '../pages/Dashboard/AssignAssets/AssignAssets';
+import EmployeeRoutes from './EmployeeRoutes';
 
 
 
@@ -72,27 +74,33 @@ export const router = createBrowserRouter([
       children: [
         {
           path: 'my-assets',
-          Component: MyAssets
+          element: <EmployeeRoutes><MyAssets></MyAssets></EmployeeRoutes>
         },
+              // HR Routes
         {
         path: 'upgrade-package',
-        Component: UpgradePackage
+        element: <HRRoute><UpgradePackage></UpgradePackage></HRRoute>
       },
       {
         path: 'upgrade-success',
-        Component: UpgradeSuccess
+        element: <HRRoute><UpgradeSuccess></UpgradeSuccess></HRRoute>
       },
       {
         path: 'upgrade-cancelled',
-        Component: UpgradeCancelled
+        element: <HRRoute><UpgradeCancelled></UpgradeCancelled></HRRoute>
       },
       {
         path: 'payment-history',
-        Component: PaymentHistory
+        element: <HRRoute><PaymentHistory></PaymentHistory></HRRoute>
       },
+
       {
         path: 'approve-employees',
         element: <HRRoute><ApproveEmployees></ApproveEmployees></HRRoute>
+      },
+      {
+        path: 'assign-assets',
+        element: <HRRoute><AssignAssets></AssignAssets></HRRoute>
       },
       {
         path: 'users-management',

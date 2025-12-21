@@ -21,6 +21,7 @@ import UsersManagement from '../pages/Dashboard/UsersManagement/UsersManagement'
 import HRRoute from './HRRoute';
 import AssignAssets from '../pages/Dashboard/AssignAssets/AssignAssets';
 import EmployeeRoutes from './EmployeeRoutes';
+import DashboardHome from '../pages/Dashboard/DashboardHome/DashboardHome';
 
 
 
@@ -72,6 +73,10 @@ export const router = createBrowserRouter([
   path: 'dashboard',
     element: <PrivateRoute><DashboardLayout></DashboardLayout></PrivateRoute>,
       children: [
+        {
+            index: true,
+            Component: DashboardHome
+        },
         {
           path: 'my-assets',
           element: <EmployeeRoutes><MyAssets></MyAssets></EmployeeRoutes>

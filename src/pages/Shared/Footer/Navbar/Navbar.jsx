@@ -16,6 +16,7 @@ const Navbar = () => {
     <div className="navbar bg-base-100 shadow-sm sticky top-0 z-50 mb-12">
       <div className="w-full max-w-7xl mx-auto px-3 flex justify-between items-center">
         {/* Logo */}
+
         <Link to="/" className="flex items-center gap-2">
           <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
             <span className="text-primary font-bold text-lg">AV</span>
@@ -49,8 +50,10 @@ const Navbar = () => {
 
               {/* Dashboard shortcut */}
               <li>
-                <NavLink to="/dashboard/my-assets">Dashboard</NavLink>
+                <NavLink to="/dashboard">Dashboard</NavLink>
               </li>
+              
+
             </>
           )}
         </ul>

@@ -8,13 +8,6 @@ import { FcApproval } from "react-icons/fc";
 import useRole from '../hooks/useRole';
 import { MdInventory } from "react-icons/md";
 
-
-
-
-
-
-
-
 const DashboardLayout = () => {
 
     const { role, roleLoading } = useRole();
@@ -47,8 +40,15 @@ const DashboardLayout = () => {
                     {/* Sidebar content here */}
                     <ul className="menu w-full grow">
                         {/* List item */}
+
+                        <Link to="/" className="flex items-center gap-2">
+                            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                <span className="text-primary font-bold text-lg">AV</span>
+                            </div>
+                        </Link>
+
                         <li>
-                            <Link to={'/'} className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Homepage">
+                            <Link to={'/dashboard'} className="is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Homepage">
                                 {/* Home icon */}
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" strokeLinejoin="round" strokeLinecap="round" strokeWidth="2" fill="none" stroke="currentColor" className="my-1.5 inline-block size-4"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></svg>
                                 <span className="is-drawer-close:hidden">Homepage</span>
@@ -76,7 +76,7 @@ const DashboardLayout = () => {
                                     {/* <NavLink to="/dashboard/my-assets"> My Assets</NavLink> */}
 
                                     <NavLink className="is-drawer-close:tooltip is-drawer-close:tooltip-right pt-3 pl-2" data-tip="My Assets" to={'/dashboard/my-assets'}>
-                                        <MdInventory  size={25} />
+                                        <MdInventory size={25} />
                                         <span className="is-drawer-close:hidden">My Assets</span>
                                     </NavLink>
                                 </li>

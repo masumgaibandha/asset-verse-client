@@ -1,4 +1,3 @@
-// src/pages/Dashboard/AssignAssets/AssignAssets.jsx
 import { useQuery } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import Swal from "sweetalert2";
@@ -11,25 +10,21 @@ const AssignAssets = () => {
     const [selectedRequest, setSelectedRequest] = useState(null);
     const [selectedEmployeeId, setSelectedEmployeeId] = useState("");
 
-    // 1) Load pending requests
-    const {
+       const {
         data: requests = [],
-        refetch: refetchRequests,
+        refetch,
         isLoading: reqLoading,
     } = useQuery({
-        queryKey: ["asset-requests", "pending"],
+        queryKey: ["requests-all"],
         queryFn: async () => {
-            const res = await axiosSecure.get("/requests?requestStatus=pending");
+            const res = await axiosSecure.get("/requests");
             return res.data;
         },
     });
 
-    // 2) Load available employees (only when modal opened)
-    const {
-        data: employees = [],
-        isLoading: empLoading,
-    } = useQuery({
-        queryKey: ["employees", "available", selectedRequest?._id],
+    // ✅ Load available employees only when modal opens
+    const { data: employees = [], isLoading: empLoading } = useQuery({
+        queryKey: ["employees-available", selectedRequest?._id],
         enabled: !!selectedRequest?._id,
         queryFn: async () => {
             const res = await axiosSecure.get(
@@ -69,7 +64,6 @@ const AssignAssets = () => {
                 payload
             );
 
-            // your server returns: { requestResult, employeeResult }
             const ok =
                 res.data?.requestResult?.modifiedCount > 0 &&
                 res.data?.employeeResult?.modifiedCount > 0;
@@ -78,12 +72,12 @@ const AssignAssets = () => {
                 modalRef.current?.close();
                 setSelectedRequest(null);
                 setSelectedEmployeeId("");
-                refetchRequests();
+                refetch();
 
                 Swal.fire({
                     position: "top-end",
                     icon: "success",
-                    title: "Asset request assigned",
+                    title: "Assigned successfully",
                     showConfirmButton: false,
                     timer: 1500,
                 });
@@ -96,15 +90,46 @@ const AssignAssets = () => {
         }
     };
 
+    // ✅ Update status (Complete / Return)
+    const handleUpdateStatus = async (request, newStatus) => {
+        try {
+            const res = await axiosSecure.patch(`/requests/${request._id}/status`, {
+                requestStatus: newStatus,
+                employeeId: request.assignedEmployeeId, // server will make employee available again
+            });
+
+            if (res.data?.modifiedCount > 0) {
+                refetch();
+                Swal.fire({
+                    position: "top-end",
+                    icon: "success",
+                    title: `Marked as ${newStatus}`,
+                    showConfirmButton: false,
+                    timer: 1500,
+                });
+            } else {
+                Swal.fire("Error", "Status update failed.", "error");
+            }
+        } catch (err) {
+            console.log(err);
+            Swal.fire("Error", "Status update failed. Check console.", "error");
+        }
+    };
+
     if (reqLoading) {
         return <span className="loading loading-spinner loading-lg"></span>;
     }
 
+    // optional: show pending first
+    const sorted = [...requests].sort((a, b) => {
+        const aT = new Date(a.createdAt || 0).getTime();
+        const bT = new Date(b.createdAt || 0).getTime();
+        return bT - aT;
+    });
+
     return (
         <div>
-            <h2 className="text-4xl font-bold mb-6">
-                Assign Assets (Pending): {requests.length}
-            </h2>
+            <h2 className="text-4xl font-bold mb-6">Assign Assets: {sorted.length}</h2>
 
             <div className="overflow-x-auto">
                 <table className="table table-zebra">
@@ -113,43 +138,88 @@ const AssignAssets = () => {
                             <th>#</th>
                             <th>Asset</th>
                             <th>QTY</th>
-                            <th>Employee</th>
-                            <th>Employee Email</th>
+                            <th>Requested By</th>
+                            <th>Email</th>
                             <th>Company</th>
                             <th>Status</th>
+                            <th>Assigned To</th>
                             <th>Action</th>
                         </tr>
                     </thead>
 
                     <tbody>
-                        {requests.map((request, index) => (
-                            <tr key={request._id}>
-                                <th>{index + 1}</th>
-                                <td>{request.assetName}</td>
-                                <td>{request.assetQTY || "-"}</td>
-                                <td>{request.employeeName}</td>
-                                <td>{request.employeeEmail}</td>
-                                <td>{request.companyName}</td>
-                                <td>
-                                    <span className="badge badge-warning">
-                                        {request.requestStatus}
-                                    </span>
-                                </td>
-                                <td>
-                                    <button
-                                        onClick={() => openAssignModal(request)}
-                                        className="btn btn-accent text-white btn-sm"
-                                    >
-                                        Assign
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                        {sorted.map((request, index) => {
+                            const status = request.requestStatus || "pending";
+                            const isPending = status === "pending";
+                            const isAssigned = status === "assigned";
 
-                        {requests.length === 0 && (
+                            return (
+                                <tr key={request._id}>
+                                    <th>{index + 1}</th>
+                                    <td>{request.assetName}</td>
+                                    <td>{request.assetQTY || "-"}</td>
+                                    <td>{request.employeeName}</td>
+                                    <td>{request.employeeEmail}</td>
+                                    <td>{request.companyName}</td>
+                                    <td>
+                                        <span
+                                            className={`badge ${status === "pending"
+                                                    ? "badge-warning"
+                                                    : status === "assigned"
+                                                        ? "badge-info"
+                                                        : status === "completed"
+                                                            ? "badge-success"
+                                                            : "badge-neutral"
+                                                }`}
+                                        >
+                                            {status}
+                                        </span>
+                                    </td>
+                                    <td>{request.assignedEmployeeName || "-"}</td>
+
+                                    <td className="space-x-2">
+                                        {/* ✅ PENDING -> show Assign */}
+                                        {isPending && (
+                                            <button
+                                                onClick={() => openAssignModal(request)}
+                                                className="btn btn-accent text-white btn-sm"
+                                            >
+                                                Assign
+                                            </button>
+                                        )}
+
+                                        {/* ✅ ASSIGNED -> show Complete + Return */}
+                                        {isAssigned && (
+                                            <>
+                                                <button
+                                                    onClick={() => handleUpdateStatus(request, "completed")}
+                                                    className="btn btn-success text-white btn-sm"
+                                                >
+                                                    Complete
+                                                </button>
+
+                                                <button
+                                                    onClick={() => handleUpdateStatus(request, "returned")}
+                                                    className="btn btn-warning text-white btn-sm"
+                                                >
+                                                    Return
+                                                </button>
+                                            </>
+                                        )}
+
+                                        {/* ✅ Completed/Returned -> no action */}
+                                        {!isPending && !isAssigned && (
+                                            <span className="text-xs text-gray-500">No action</span>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+
+                        {sorted.length === 0 && (
                             <tr>
-                                <td colSpan="8" className="text-center text-gray-500">
-                                    No pending requests 🎉
+                                <td colSpan="9" className="text-center text-gray-500">
+                                    No requests found 🎉
                                 </td>
                             </tr>
                         )}
@@ -157,7 +227,7 @@ const AssignAssets = () => {
                 </table>
             </div>
 
-            {/* Modal */}
+            {/* ✅ Assign Modal */}
             <dialog ref={modalRef} className="modal modal-bottom sm:modal-middle">
                 <div className="modal-box">
                     <h3 className="font-bold text-lg mb-2">Assign Asset</h3>

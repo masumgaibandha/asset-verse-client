@@ -67,7 +67,7 @@ const Navbar = () => {
             </Link>
           ) : (
             <>
-              <Link to="/dashboard" className="btn btn-accent text-white hidden md:inline-flex">
+              <Link to="/dashboard" className="btn btn-primary text-white hidden md:inline-flex">
                 Dashboard
               </Link>
 

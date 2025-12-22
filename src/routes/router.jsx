@@ -27,6 +27,8 @@ import AddAsset from '../pages/Dashboard/AddAsset/AddAsset';
 import AllRequests from '../pages/Dashboard/AllRequests/AllRequests';
 import RequestAsset from '../pages/EmployeeDashboard/RequestAsset/RequestAsset';
 import MyTeam from '../pages/Dashboard/MyTeam/MyTeam';
+import Profile from '../pages/Dashboard/Profile/Profile';
+import EmployeeList from '../pages/Dashboard/EmployeeList/EmployeeList';
 
 
 
@@ -83,6 +85,11 @@ export const router = createBrowserRouter([
         Component: DashboardHome
       },
       {
+        path: "profile",
+        element: <Profile></Profile>
+      },
+      // Employee routes
+      {
         path: 'my-assets',
         element: <EmployeeRoutes><MyAssets></MyAssets></EmployeeRoutes>
       },
@@ -94,7 +101,8 @@ export const router = createBrowserRouter([
         path: "my-team",
         element: <EmployeeRoutes><MyTeam /></EmployeeRoutes>
       },
-      
+
+
       // HR Routes
       {
         path: 'upgrade-package',
@@ -137,6 +145,10 @@ export const router = createBrowserRouter([
       {
         path: "all-requests",
         element: <HRRoute><AllRequests /></HRRoute>
+      },
+      {
+        path: "employee-list",
+        element: <HRRoute><EmployeeList></EmployeeList></HRRoute>
       }
     ]
   }

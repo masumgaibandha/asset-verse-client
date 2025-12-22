@@ -20,23 +20,20 @@ const useAxiosSecure = () => {
       return config
     })
     // Interceptor response
-    const resInterceptor = axiosSecure.interceptors.response.use((response) => {
-      return response;
-    }, (error) => {
-      console.log(error)
+    const resInterceptor = axiosSecure.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const statusCode = error.response?.status;
 
-      const statusCode = error.response?.status;
-      if(statusCode === 401 || statusCode === 403){
-        logOut()
-        .then(()=>{
-          navigate('/login')
-      })
-      }
+        // 🔒 Token invalid / expired
+        if (statusCode === 401) {
+          logOut().then(() => navigate("/login"));
+        }
+
       
-
-
-      return Promise.reject(error);
-    })
+        return Promise.reject(error);
+      }
+    );
 
 
     return () => {

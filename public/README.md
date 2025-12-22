@@ -38,5 +38,12 @@ VITE_FIREBASE_storageBucket=...
 VITE_FIREBASE_messagingSenderId=...
 VITE_FIREBASE_appId=...
 
+Test Credentials
+
+HR / Admin Account
 Email: hr@testcompany.com
-Password: 
+Password: Test12345
+
+Employee Account
+Email: employee@testcompany.com
+Password: Test12345

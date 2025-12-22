@@ -1,151 +1,208 @@
-import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import Swal from "sweetalert2";
+import { useQuery } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import axios from "axios";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAuth from "../../../hooks/useAuth";
 
 const Profile = () => {
     const axiosSecure = useAxiosSecure();
+    const { user, updateUserProfile } = useAuth();
+
+    const [name, setName] = useState("");
+    const [photoFile, setPhotoFile] = useState(null);
     const [saving, setSaving] = useState(false);
 
     const { data: me = {}, isLoading, refetch } = useQuery({
-        queryKey: ["me-profile"],
+        queryKey: ["me"],
+        enabled: !!user?.email,
         queryFn: async () => {
             const res = await axiosSecure.get("/users/me");
             return res.data;
         },
     });
 
-    const [form, setForm] = useState({
-        displayName: "",
-        photoURL: "",
-        dateOfBirth: "",
-        companyName: "",
-        companyLogo: "",
+    const { data: affiliations = [], isLoading: affLoading } = useQuery({
+        queryKey: ["affiliations-me"],
+        enabled: !!user?.email,
+        queryFn: async () => {
+            const res = await axiosSecure.get("/affiliations/me");
+            return res.data;
+        },
     });
 
-    if (isLoading) return <span className="loading loading-spinner loading-lg"></span>;
+    const uploadToImgBB = async (file) => {
+        const formData = new FormData();
+        formData.append("image", file);
 
-    const onChange = (e) => setForm((p) => ({ ...p, [e.target.name]: e.target.value }));
+        const key = import.meta.env.VITE_image_host_key;
+        const url = `https://api.imgbb.com/1/upload?key=${key}`;
 
-    const fillDefault = () => {
-        setForm({
-            displayName: me.displayName || "",
-            photoURL: me.photoURL || "",
-            dateOfBirth: me.dateOfBirth ? String(me.dateOfBirth).slice(0, 10) : "",
-            companyName: me.companyName || "",
-            companyLogo: me.companyLogo || "",
-        });
+        const res = await axios.post(url, formData);
+        return res?.data?.data?.url;
     };
 
     const handleSave = async (e) => {
         e.preventDefault();
-        setSaving(true);
+
+        if (!name && !photoFile) {
+            toast.info("Nothing to update");
+            return;
+        }
 
         try {
-            const payload = {
-                displayName: form.displayName,
-                photoURL: form.photoURL,
-                dateOfBirth: form.dateOfBirth,
-            };
+            setSaving(true);
 
-            if (me.role === "hr") {
-                payload.companyName = form.companyName;
-                payload.companyLogo = form.companyLogo;
+            let uploadedUrl = null;
+            if (photoFile) {
+                uploadedUrl = await uploadToImgBB(photoFile);
             }
+
+            const payload = {};
+            if (name) payload.displayName = name;
+            if (uploadedUrl) payload.photoURL = uploadedUrl;
 
             const res = await axiosSecure.patch("/users/me", payload);
 
-            if (res.data?.modifiedCount > 0) {
-                await refetch();
-                Swal.fire("Saved", "Profile updated successfully.", "success");
-            } else {
-                Swal.fire("No change", "Nothing updated.", "info");
-            }
+            const newDisplayName = payload.displayName || me.displayName || user?.displayName || "";
+            const newPhotoURL = payload.photoURL || me.photoURL || user?.photoURL || "";
+
+            await updateUserProfile({
+                displayName: newDisplayName,
+                photoURL: newPhotoURL,
+            });
+
+            setName("");
+            setPhotoFile(null);
+            await refetch();
+
+            toast.success("Profile updated");
+            return res.data;
         } catch (err) {
             console.log(err);
-            Swal.fire("Error", "Update failed.", "error");
+            toast.error("Profile update failed");
         } finally {
             setSaving(false);
         }
     };
 
+    if (isLoading) return <span className="loading loading-spinner loading-lg"></span>;
+
+    const photo = me.photoURL || user?.photoURL || "https://i.ibb.co/4pDNDk1/avatar.png";
+    const role = me.role || "user";
+    const email = me.email || user?.email || "";
+
     return (
-        <div className="max-w-2xl">
-            <div className="flex items-center justify-between mb-4">
-                <h2 className="text-3xl font-bold">Profile</h2>
-                <button onClick={fillDefault} className="btn btn-sm btn-outline">
-                    Load Current
-                </button>
+        <div className="p-6 space-y-6">
+            <h2 className="text-3xl font-bold">Profile</h2>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="card bg-base-100 border">
+                    <div className="card-body items-center text-center">
+                        <div className="avatar">
+                            <div className="w-24 rounded-full">
+                                <img src={photo} alt="profile" />
+                            </div>
+                        </div>
+                        <h3 className="text-xl font-bold mt-2">{me.displayName || user?.displayName || "User"}</h3>
+                        <p className="text-sm opacity-70">{email}</p>
+                        <div className="badge badge-outline mt-2">{role}</div>
+                    </div>
+                </div>
+
+                <div className="card bg-base-100 border lg:col-span-2">
+                    <div className="card-body">
+                        <h3 className="text-xl font-bold">Update Information</h3>
+
+                        <form onSubmit={handleSave} className="space-y-4">
+                            <div>
+                                <label className="label font-semibold">Name</label>
+                                <input
+                                    type="text"
+                                    className="input input-bordered w-full"
+                                    defaultValue={me.displayName || user?.displayName || ""}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Update your name"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="label font-semibold">Email (read only)</label>
+                                <input
+                                    type="email"
+                                    className="input input-bordered w-full"
+                                    value={email}
+                                    readOnly
+                                />
+                            </div>
+
+                            <div>
+                                <label className="label font-semibold">Profile Photo</label>
+                                <input
+                                    type="file"
+                                    className="file-input file-input-bordered w-full"
+                                    onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                                />
+                            </div>
+
+                            <button disabled={saving} className="btn btn-accent text-white w-full">
+                                {saving ? "Saving..." : "Save Changes"}
+                            </button>
+                        </form>
+                    </div>
+                </div>
             </div>
 
             <div className="card bg-base-100 border">
                 <div className="card-body">
-                    <form onSubmit={handleSave} className="space-y-3">
-                        <div>
-                            <label className="label font-semibold">Name</label>
-                            <input
-                                name="displayName"
-                                value={form.displayName}
-                                onChange={onChange}
-                                className="input input-bordered w-full"
-                                required
-                            />
-                        </div>
+                    <h3 className="text-xl font-bold">Company Affiliations</h3>
 
-                        <div>
-                            <label className="label font-semibold">Photo URL</label>
-                            <input
-                                name="photoURL"
-                                value={form.photoURL}
-                                onChange={onChange}
-                                className="input input-bordered w-full"
-                            />
-                        </div>
-
-                        <div>
-                            <label className="label font-semibold">Email (readonly)</label>
-                            <input value={me.email || ""} readOnly className="input input-bordered w-full" />
-                        </div>
-
-                        <div>
-                            <label className="label font-semibold">Date of Birth</label>
-                            <input
-                                type="date"
-                                name="dateOfBirth"
-                                value={form.dateOfBirth}
-                                onChange={onChange}
-                                className="input input-bordered w-full"
-                            />
-                        </div>
-
-                        {me.role === "hr" && (
-                            <>
-                                <div>
-                                    <label className="label font-semibold">Company Name</label>
-                                    <input
-                                        name="companyName"
-                                        value={form.companyName}
-                                        onChange={onChange}
-                                        className="input input-bordered w-full"
-                                    />
+                    {role === "hr" && (
+                        <div className="mt-2">
+                            <p className="text-sm opacity-70">
+                                As HR, your primary company is:
+                            </p>
+                            <div className="mt-3 flex items-center gap-3">
+                                <div className="avatar">
+                                    <div className="w-10 rounded">
+                                        <img src={me.companyLogo || "https://i.ibb.co/4pDNDk1/avatar.png"} alt="logo" />
+                                    </div>
                                 </div>
-
                                 <div>
-                                    <label className="label font-semibold">Company Logo URL</label>
-                                    <input
-                                        name="companyLogo"
-                                        value={form.companyLogo}
-                                        onChange={onChange}
-                                        className="input input-bordered w-full"
-                                    />
+                                    <p className="font-semibold">{me.companyName || "N/A"}</p>
+                                    <p className="text-xs opacity-70">{me.subscription || "free"} plan</p>
                                 </div>
-                            </>
-                        )}
+                            </div>
+                        </div>
+                    )}
 
-                        <button disabled={saving} className="btn btn-accent text-white w-full">
-                            {saving ? "Saving..." : "Save Changes"}
-                        </button>
-                    </form>
+                    {role === "employee" && (
+                        <div className="mt-4">
+                            {affLoading ? (
+                                <span className="loading loading-spinner loading-md"></span>
+                            ) : affiliations.length === 0 ? (
+                                <p className="text-sm text-warning">
+                                    No company affiliation yet. Request an asset to get affiliated.
+                                </p>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {affiliations.map((a) => (
+                                        <div key={a._id} className="border rounded-lg p-4 flex items-center gap-3">
+                                            <div className="avatar">
+                                                <div className="w-10 rounded">
+                                                    <img src={a.companyLogo || "https://i.ibb.co/4pDNDk1/avatar.png"} alt="logo" />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <p className="font-semibold">{a.companyName}</p>
+                                                <p className="text-xs opacity-70">HR: {a.hrEmail}</p>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

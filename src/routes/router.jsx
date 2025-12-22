@@ -29,129 +29,74 @@ import RequestAsset from '../pages/EmployeeDashboard/RequestAsset/RequestAsset';
 import MyTeam from '../pages/Dashboard/MyTeam/MyTeam';
 import Profile from '../pages/Dashboard/Profile/Profile';
 import EmployeeList from '../pages/Dashboard/EmployeeList/EmployeeList';
-
-
+import About from '../pages/Shared/About/About';
+import NotFound from "../pages/NotFound/NotFound";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     Component: RootLayout,
     children: [
-      {
-        index: true,
-        Component: Home
-      },
-      {
-        path: 'employee',
-        element: <PrivateRoute><Employee></Employee></PrivateRoute>
-
-      },
-      {
-        path: 'asset-request',
-        element: <PrivateRoute><AssetRequest></AssetRequest></PrivateRoute>
-      },
+      { index: true, Component: Home },
+      { path: "about", element: <About /> },
 
       {
-        path: 'asset-overview',
+        path: "employee",
+        element: <PrivateRoute><Employee /></PrivateRoute>
+      },
+      {
+        path: "asset-request",
+        element: <PrivateRoute><AssetRequest /></PrivateRoute>
+      },
+      {
+        path: "asset-overview",
         Component: AssetOverview,
         loader: () => fetch('/companyLocations.json').then(res => res.json())
-      }
+      },
+
+      // ✅ Public 404
+      { path: "*", element: <NotFound /> }
     ]
   },
+
   {
-    path: '/',
+    path: "/",
     Component: AuthLayout,
     children: [
-      {
-        path: 'login',
-        Component: Login
-      },
-      {
-        path: 'employee-register',
-        Component: EmployeeRegister
-      },
-      {
-        path: 'hr-register',
-        Component: HRRegister
-      }
+      { path: "login", Component: Login },
+      { path: "employee-register", Component: EmployeeRegister },
+      { path: "hr-register", Component: HRRegister }
     ]
   },
+
   {
-    path: 'dashboard',
-    element: <PrivateRoute><DashboardLayout></DashboardLayout></PrivateRoute>,
+    path: "dashboard",
+    element: <PrivateRoute><DashboardLayout /></PrivateRoute>,
     children: [
-      {
-        index: true,
-        Component: DashboardHome
-      },
-      {
-        path: "profile",
-        element: <Profile></Profile>
-      },
-      // Employee routes
-      {
-        path: 'my-assets',
-        element: <EmployeeRoutes><MyAssets></MyAssets></EmployeeRoutes>
-      },
-      {
-        path: "request-asset",
-        element: <EmployeeRoutes><RequestAsset /></EmployeeRoutes>
-      },
-      {
-        path: "my-team",
-        element: <EmployeeRoutes><MyTeam /></EmployeeRoutes>
-      },
+      { index: true, Component: DashboardHome },
+      { path: "profile", Component: Profile },
 
+      // Employee
+      { path: "my-assets", element: <EmployeeRoutes><MyAssets /></EmployeeRoutes> },
+      { path: "request-asset", element: <EmployeeRoutes><RequestAsset /></EmployeeRoutes> },
+      { path: "my-team", element: <EmployeeRoutes><MyTeam /></EmployeeRoutes> },
 
-      // HR Routes
-      {
-        path: 'upgrade-package',
-        element: <HRRoute><UpgradePackage></UpgradePackage></HRRoute>
-      },
-      {
-        path: 'upgrade-success',
-        element: <HRRoute><UpgradeSuccess></UpgradeSuccess></HRRoute>
-      },
-      {
-        path: 'upgrade-cancelled',
-        element: <HRRoute><UpgradeCancelled></UpgradeCancelled></HRRoute>
-      },
-      {
-        path: 'payment-history',
-        element: <HRRoute><PaymentHistory></PaymentHistory></HRRoute>
-      },
+      // HR
+      { path: "upgrade-package", element: <HRRoute><UpgradePackage /></HRRoute> },
+      { path: "upgrade-success", element: <HRRoute><UpgradeSuccess /></HRRoute> },
+      { path: "upgrade-cancelled", element: <HRRoute><UpgradeCancelled /></HRRoute> },
+      { path: "payment-history", element: <HRRoute><PaymentHistory /></HRRoute> },
+      { path: "approve-employees", element: <HRRoute><ApproveEmployees /></HRRoute> },
+      { path: "assign-assets", element: <HRRoute><AssignAssets /></HRRoute> },
+      { path: "users-management", element: <HRRoute><UsersManagement /></HRRoute> },
+      { path: "asset-list", element: <HRRoute><AssetList /></HRRoute> },
+      { path: "add-asset", element: <HRRoute><AddAsset /></HRRoute> },
+      { path: "all-requests", element: <HRRoute><AllRequests /></HRRoute> },
+      { path: "employee-list", element: <HRRoute><EmployeeList /></HRRoute> },
 
-      {
-        path: 'approve-employees',
-        element: <HRRoute><ApproveEmployees></ApproveEmployees></HRRoute>
-      },
-      {
-        path: 'assign-assets',
-        element: <HRRoute><AssignAssets></AssignAssets></HRRoute>
-      },
-      {
-        path: 'users-management',
-        // Component: UsersManagement
-        element: <HRRoute><UsersManagement></UsersManagement></HRRoute>
-      },
-      {
-        path: "asset-list",
-        element: <HRRoute><AssetList /></HRRoute>
-      },
-      {
-        path: "add-asset",
-        element: <HRRoute><AddAsset /></HRRoute>
-      },
-      {
-        path: "all-requests",
-        element: <HRRoute><AllRequests /></HRRoute>
-      },
-      {
-        path: "employee-list",
-        element: <HRRoute><EmployeeList></EmployeeList></HRRoute>
-      }
+      // ✅ Dashboard 404
+      { path: "*", element: <NotFound /> }
     ]
   }
 ]);
-
 

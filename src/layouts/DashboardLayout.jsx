@@ -27,7 +27,7 @@ const DashboardLayout = () => {
             <li><NavLink className={linkClass} to="/dashboard/add-asset">Add Asset</NavLink></li>
             <li><NavLink className={linkClass} to="/dashboard/all-requests">All Requests</NavLink></li>
             <li><NavLink className={linkClass} to="/dashboard/approve-employees">Approve Employees</NavLink></li>
-            <li><NavLink className={linkClass} to="/dashboard/assign-assets">Assign Assets</NavLink></li>
+            {/* <li><NavLink className={linkClass} to="/dashboard/assign-assets">Assign Assets</NavLink></li> */}
             <li><NavLink className={linkClass} to="/dashboard/employee-list">My Employee List</NavLink></li>
             <li><NavLink className={linkClass} to="/dashboard/users-management">Users Management</NavLink></li>
             <li><NavLink className={linkClass} to="/dashboard/upgrade-package">Upgrade Package</NavLink></li>

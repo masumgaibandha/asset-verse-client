@@ -4,8 +4,9 @@
 AssetVerse is a B2B HR & Asset Management platform that helps companies track assets (laptops, chairs, etc.), manage employee requests, and maintain assignment/return history with package-based limits.
 
 ## Live URL
-- Client: 
-- Server: 
+- Client: https://asset-verse-b5fc2.web.app
+- Server: https://assetverse-server-tau.vercel.app
+          
 
 ## Key Features
 - HR registration with default free employee credit, package upgrade via Stripe

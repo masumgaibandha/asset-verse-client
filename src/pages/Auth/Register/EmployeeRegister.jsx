@@ -40,7 +40,7 @@ const EmployeeRegister = () => {
         createdAt: new Date(),
       };
 
-      await axios.post("http://localhost:3000/users", userInfo);
+      await axios.post("https://assetverse-server-tau.vercel.app/users", userInfo);
 
       const employeeInfo = {
         name: data.name,
@@ -50,7 +50,7 @@ const EmployeeRegister = () => {
         photoURL: uploadedUrl,
         dateOfBirth: data.dateOfBirth,
       };
-      await axios.post("http://localhost:3000/employees", employeeInfo);
+      await axios.post("https://assetverse-server-tau.vercel.app/employees", employeeInfo);
 
 
       await logOut();
